@@ -1,0 +1,54 @@
+{% load static %}
+{% load staticfiles %}
+{% get_static_prefix as STATIC_PREFIX %}
+
+<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/bootstrap.min.css"></link>
+<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/parsed_query.css"></link>
+<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/jquery-2.0.3.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/parsed_query.js"></script>
+
+<div class="gray-background">
+	<div class="search-block">
+		<div class="logo inline-block-top-aligned">
+			<img class ="logo-image" src="{{STATIC_PREFIX}}ding/images/logo.png"/>
+			<span class="logo-text">
+				ding
+			</span>
+		</div>
+
+  		<div class="half inline-block-top-aligned search-field">
+  			<form class="search-form" method="post" action="{% url 'ding:parsed_query' %}">
+    			<div class="input-group">
+    				{% csrf_token %}
+      				<input class="form-control" type="text" name="query"/>
+      				<span class="input-group-btn">
+      					<button class="btn btn-default" type="button submit" value="Search">
+							<img class ="search-image" src="{{STATIC_PREFIX}}ding/images/search-icon.png"/>
+						</button>
+        			</span>
+    			</div>
+			</form>
+  		</div>
+	</div>
+</div>
+<div class = "search-results">
+	<h1>Searched: {{query}}</h1>
+	<h1>Number Of Words: {{numOfWords}}</h1>
+	{% if shouldShowTable == True %}
+		<table class = "table table-striped count-table">
+		<tr>
+			<td>#</td>
+			<td>Word</td>
+			<td>Count</td>
+		</tr>
+		{% for k, v in frequencyDictionary %}
+		<tr>
+			<td>{{forloop.counter}}</td>
+			<td>{{k}}</td>
+			<td>{{v}}</td>
+		</tr>
+		{% endfor %}
+		</table>
+	
+	{% endif %}
+</div>

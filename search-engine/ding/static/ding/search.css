@@ -1,0 +1,33 @@
+.logo {
+  text-align: center;
+  color: #BE0011; }
+
+.logo-text {
+  font-family: Georgia;
+  font-size: 60px; }
+
+.logo-image {
+  vertical-align: middle;
+  width: 80px;
+  height: 80x; }
+
+.search-block {
+  text-align: center; }
+
+.search-field {
+  width: 50%; }
+
+.count-table {
+  width: 90%;
+  margin-top: 20px;
+  margin-left: 5%; }
+
+.table-hover tbody tr:hover td {
+  background-color: #8A8B89; }
+.table-hover tbody tr:hover td.no-highlight {
+  background-color: #F8F8F8; }
+
+table, th {
+  outline-style: solid;
+  outline-width: 1px;
+  outline-color: #d5d5d5; }

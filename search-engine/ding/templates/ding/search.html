@@ -1,0 +1,40 @@
+{% load static %}
+{% load staticfiles %}
+{% get_static_prefix as STATIC_PREFIX %}
+
+<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/jquery-2.0.3.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/search.js"></script>
+<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/bootstrap.min.css"></link>
+<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/search.css"></link>
+
+<div class="logo">
+	<h1 class = "logo-text">
+		<img class = "logo-image" src="{{STATIC_PREFIX}}ding/images/logo.png"/>
+		ding
+	</h1>
+</div>
+
+<div class="search-block">
+	<form class = "search-form" action="{% url 'ding:parsed_query' %}" method="post">
+		{% csrf_token %}
+		<input class="search-field" type="text" name="query">
+		<input class="submit" type="submit" value="Search"/>
+	</form>
+</div>
+
+<div class="most-frequent-searches">
+	<table class="table table-striped count-table table-hover">
+	<tr>
+		<td class="no-highlight">#</td>
+		<td class="no-highlight">Word</td>
+		<td class="no-highlight">Count</td>
+	</tr>
+	{% for k, v in frequencyDictionary %}
+	<tr>
+		<td>{{forloop.counter}}</td>
+		<td>{{k}}</td>
+		<td>{{v}}</td>
+	</tr>
+	{% endfor %}
+	</table>
+</div>
