@@ -16,3 +16,5 @@ Usage
 1. Change into search-engine directory `cd search-engine`
 1. Sync django db `python manage.py syncdb`
 1. Run django server `python manage.py runserver`
+1. Open the website in a browser:'localhost:8000/ding'
+1. Run a search from the main page to be redirected to the results page. Continue running several searches, composed of either 1 or multiple words. After a sufficient number of searched, go back to the url for the home page (refresh the page if necessary), and the table should be updated with the top 20 most searched keywords.
