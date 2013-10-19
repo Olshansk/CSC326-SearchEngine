@@ -1,12 +1,13 @@
 # Django settings for search-engine project.
 import os
+
 DIRNAME = os.path.abspath(os.path.dirname(__file__))
 
 DEBUG = True
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
-    # ('Your Name', 'your_email@example.com'),
+# ('Your Name', 'your_email@example.com'),
 )
 
 MANAGERS = ADMINS
@@ -14,12 +15,12 @@ MANAGERS = ADMINS
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.sqlite3', # Add 'postgresql_psycopg2', 'mysql', 'sqlite3' or 'oracle'.
-        'NAME': 'db.sqlite3',                      # Or path to database file if using sqlite3.
+        'NAME': 'db.sqlite3', # Or path to database file if using sqlite3.
         # The following settings are not used with sqlite3:
         'USER': '',
         'PASSWORD': '',
-        'HOST': '',                      # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
-        'PORT': '',                      # Set to empty string for default.
+        'HOST': '', # Empty for localhost through domain sockets or '127.0.0.1' for localhost through TCP.
+        'PORT': '', # Set to empty string for default.
     }
 }
 
@@ -71,9 +72,9 @@ STATIC_URL = '/static/'
 
 # Additional locations of static files
 STATICFILES_DIRS = (
-    # Put strings here, like "/home/html/static" or "C:/www/django/static".
-    # Always use forward slashes, even on Windows.
-    # Don't forget to use absolute paths, not relative paths.
+# Put strings here, like "/home/html/static" or "C:/www/django/static".
+# Always use forward slashes, even on Windows.
+# Don't forget to use absolute paths, not relative paths.
 )
 
 # List of finder classes that know how to find static files in
@@ -81,7 +82,7 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
-#    'django.contrib.staticfiles.finders.DefaultStorageFinder',
+    #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
 
 # Make this unique, and don't share it with anybody.
@@ -91,7 +92,7 @@ SECRET_KEY = '@3-)le+*$8==q-g2cq8*m-7xhg9hupa*aetn#wid_amofbqz-$'
 TEMPLATE_LOADERS = (
     'django.template.loaders.filesystem.Loader',
     'django.template.loaders.app_directories.Loader',
-#     'django.template.loaders.eggs.Loader',
+    #     'django.template.loaders.eggs.Loader',
 )
 
 MIDDLEWARE_CLASSES = (
@@ -167,4 +168,6 @@ LOGGING = {
 
 import warnings
 import exceptions
-warnings.filterwarnings("ignore", category=exceptions.RuntimeWarning, module='django.db.backends.sqlite3.base', lineno=53)
+
+warnings.filterwarnings("ignore", category=exceptions.RuntimeWarning, module='django.db.backends.sqlite3.base',
+                        lineno=53)
