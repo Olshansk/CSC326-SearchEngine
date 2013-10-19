@@ -330,7 +330,7 @@ class Command(BaseCommand):
                     help='Test the crawler on some local HTML pages'),
     )
 
-    def _handle(self, *args, **options):
+    def handle(self, *args, **options):
         if options['test']:
             Crawler.clean_db()
             bot = Crawler("ignored_page_test.txt")
