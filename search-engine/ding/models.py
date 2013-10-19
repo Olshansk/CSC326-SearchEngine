@@ -8,3 +8,6 @@ class SearchWord(models.Model):
 
     def __unicode__(self):
         return self.word_text + " count:" + str(self.word_freq)
+
+class Word(models.Model):
+    text = models.CharField(max_length=256)

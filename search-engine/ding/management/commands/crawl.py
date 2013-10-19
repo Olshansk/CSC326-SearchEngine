@@ -1,33 +1,13 @@
-# Copyright (C) 2011 by Peter Goodman
-#
-# Permission is hereby granted, free of charge, to any person obtaining a copy
-# of this software and associated documentation files (the "Software"), to deal
-# in the Software without restriction, including without limitation the rights
-# to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-# copies of the Software, and to permit persons to whom the Software is
-# furnished to do so, subject to the following conditions:
-#
-# The above copyright notice and this permission notice shall be included in
-# all copies or substantial portions of the Software.
-#
-# THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-# IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-# FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-# AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-# LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-# OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
-# THE SOFTWARE.
-
-#
-# Updated: Sept 13, 2013
-#
-
+__author__ = 'Amandeep Grewal'
 
 import urllib2
 import urlparse
-from BeautifulSoup import *
 from collections import defaultdict
 import re
+
+from django.core.management.base import BaseCommand
+from BeautifulSoup import *
+
 
 WORD_SEPARATORS = re.compile(r'\s|\n|\r|\t|[^a-zA-Z0-9\-_]')
 
@@ -407,25 +387,27 @@ class Crawler(object):
                     file_stream.close()
 
 
-if __name__ == "__main__":
-    bot = Crawler(None, "ignored_page_test.txt")
-    bot.crawl(10000) # crawl to a big depth
+class Command(BaseCommand):
+    help = 'Crawls a list of webpages'
 
-    assert(len(bot.lexicon) == 8) # manually counted 8 unique non-ignored words
-    assert(len(bot.documents) == 1) # only 1 document in list, and it has no links
-    inverted_index = bot.get_resolved_inverted_index()
-    for word in ['this', 'page', 'should', 'include', 'this', 'text']:
-        pages = inverted_index[word]
+    def handle(self, *args, **options):
+        bot = Crawler(None, "ignored_page_test.txt")
+        bot.crawl(10000) # crawl to a big depth
 
-        # All words appear only in 'ignored_test.html'
-        assert(len(pages) == 1)
-        assert('ignored_test.html' in pages)
+        assert (len(bot.lexicon) == 8) # manually counted 8 unique non-ignored words
+        assert (len(bot.documents) == 1) # only 1 document in list, and it has no links
+        inverted_index = bot.get_resolved_inverted_index()
+        for word in ['this', 'page', 'should', 'include', 'this', 'text']:
+            pages = inverted_index[word]
 
+            # All words appear only in 'ignored_test.html'
+            assert (len(pages) == 1)
+            assert ('ignored_test.html' in pages)
 
-    bot = Crawler(None, "pages_crawl_test.txt")
-    bot.crawl(10000) # crawl to a big depth
-    assert(len(bot.documents) == 5) # total of 5 pages in this crawl
-    inverted_index = bot.get_resolved_inverted_index()
-    assert (len(inverted_index['crawl']) == 5) # 'crawl' occurs in all 5 pages
-    assert (len(inverted_index['fifth']) == 1) # 'fifth' occur in all 1 page
-    assert ('second_page.html' in inverted_index['fifth']) # 'fifth' occurs in 'second_page.html'
+        bot = Crawler(None, "pages_crawl_test.txt")
+        bot.crawl(10000) # crawl to a big depth
+        assert (len(bot.documents) == 5) # total of 5 pages in this crawl
+        inverted_index = bot.get_resolved_inverted_index()
+        assert (len(inverted_index['crawl']) == 5) # 'crawl' occurs in all 5 pages
+        assert (len(inverted_index['fifth']) == 1) # 'fifth' occur in all 1 page
+        assert ('second_page.html' in inverted_index['fifth']) # 'fifth' occurs in 'second_page.html'
