@@ -4,34 +4,15 @@ import urllib2
 import urlparse
 from collections import defaultdict
 import re
+from optparse import make_option
 
 from django.core.management.base import BaseCommand
 from BeautifulSoup import *
 
+from ding.models import Word, Document, WordOnPage
+
 
 WORD_SEPARATORS = re.compile(r'\s|\n|\r|\t|[^a-zA-Z0-9\-_]')
-
-
-def attr(elem, attr):
-    """An html attribute from an html element. E.g. <a href="">, then
-    attr(elem, "href") will get the href or an empty string."""
-    try:
-        return elem[attr]
-    except:
-        return ""
-
-
-class Document:
-    def __init__(self):
-        self.url = None
-        self.words = []
-        self.id = None
-        self.url = None
-        self.title = None
-        self.description = None
-
-    def __repr__(self):
-        return repr(vars(self))
 
 
 class Crawler(object):
@@ -41,15 +22,10 @@ class Crawler(object):
     This crawler keeps track of font sizes and makes it simpler to manage word
     ids and document ids."""
 
-    def __init__(self, db_conn, url_file):
+    def __init__(self, url_file):
         """Initialize the crawler with a connection to the database to populate
         and with the file containing the list of seed URLs to begin indexing."""
         self._url_queue = []
-        self._doc_id_cache = {}
-        self._word_id_cache = {}
-
-        self.documents = dict()
-        self.lexicon = dict()
 
         # functions to call when entering and exiting tags that we don't specify font sizes for
         self._enter = defaultdict(lambda *a, **ka: self._visit_ignore)
@@ -105,15 +81,11 @@ class Crawler(object):
             'u', 'v', 'w', 'x', 'y', 'z', 'and', 'or',
         ])
 
-        # TODO remove me in real version. we currently simulate database by just storing in dictionary
-        self._mock_next_doc_id = 1
-        self._mock_next_word_id = 1
-
         # keep track of some info about the page we are currently parsing
         self._curr_depth = 0
         self._font_size = 0
         self._curr_description_words = []
-        self._curr_document = Document()
+        self._curr_document = None
 
         # get all urls into the queue
         try:
@@ -123,55 +95,8 @@ class Crawler(object):
         except IOError:
             pass
 
-
-    # TODO remove me in real version
-    def _mock_insert_document(self, url):
-        """A function that pretends to insert a url into a document db table
-        and then returns that newly inserted document's id."""
-        ret_id = self._mock_next_doc_id
-        self._mock_next_doc_id += 1
-
-        self.documents[ret_id] = self._curr_document
-        return ret_id
-
-    # TODO remove me in real version
-    def _mock_insert_word(self, word):
-        """A function that pretends to insert a word into the lexicon db table
-        and then returns that newly inserted word's id."""
-        ret_id = self._mock_next_word_id
-        self._mock_next_word_id += 1
-
-        self.lexicon[ret_id] = word
-        return ret_id
-
-    def word_id(self, word):
-        """Get the word id of some specific word."""
-        if word in self._word_id_cache:
-            return self._word_id_cache[word]
-
-        # TODO: 1) add the word to the lexicon, if that fails, then the
-        #          word is in the lexicon
-        #       2) query the lexicon for the id assigned to this word,
-        #          store it in the word id cache, and return the id.
-
-        word_id = self._mock_insert_word(word)
-        self._word_id_cache[word] = word_id
-        return word_id
-
-    def document_id(self, url):
-        """Get the document id for some url."""
-        if url in self._doc_id_cache:
-            return self._doc_id_cache[url]
-
-        # TODO: just like word id cache, but for documents. if the document
-        #       doesn't exist in the db then only insert the url and leave
-        #       the rest to their defaults.
-
-        doc_id = self._mock_insert_document(url)
-        self._doc_id_cache[url] = doc_id
-        return doc_id
-
-    def _fix_url(self, curr_url, rel):
+    @staticmethod
+    def _fix_url(curr_url, rel):
         """Given a url and either something relative to that url or another url,
         get a properly parsed url."""
 
@@ -183,6 +108,15 @@ class Crawler(object):
         curr_url = urlparse.urldefrag(curr_url)[0]
         parsed_url = urlparse.urlparse(curr_url)
         return urlparse.urljoin(parsed_url.geturl(), rel)
+
+    @staticmethod
+    def _attr(elem, attr):
+        """An html attribute from an html element. E.g. <a href="">, then
+        attr(elem, "href") will get the href or an empty string."""
+        try:
+            return elem[attr]
+        except:
+            return ""
 
     def add_link(self, from_doc_id, to_doc_id):
         """Add a link into the database, or increase the number of links between
@@ -198,7 +132,7 @@ class Crawler(object):
     def _visit_a(self, elem):
         """Called when visiting <a> tags."""
 
-        dest_url = self._fix_url(self._curr_document.url, attr(elem, "href"))
+        dest_url = self._fix_url(self._curr_document.url, self._attr(elem, "href"))
 
         #print "href="+repr(dest_url), \
         #      "title="+repr(attr(elem,"title")), \
@@ -217,8 +151,8 @@ class Crawler(object):
 
     def _enter_meta(self, elem):
         """Check meta tag for description"""
-        if attr(elem, "name") == "description":
-            self._curr_document.description = attr(elem, "content")
+        if self._attr(elem, "name") == "description":
+            self._curr_document.description = self._attr(elem, "content")
 
     def _increase_font_factor(self, factor):
         """Increade/decrease the current font size."""
@@ -243,7 +177,11 @@ class Crawler(object):
                 self._curr_description_words.append(word)
             if word in self._ignored_words:
                 continue
-            self._curr_document.words.append((self.word_id(word), self._font_size))
+
+            word_created, _ = Word.objects.get_or_create(text=word)
+            WordOnPage.objects.get_or_create(word=word_created,
+                                             document=self._curr_document,
+                                             font_size=self._font_size)
 
     def _text_of(self, elem):
         """Get the text inside some element without any tags."""
@@ -303,38 +241,38 @@ class Crawler(object):
             else:
                 self._add_text(tag)
 
-    def get_inverted_index(self):
+    @staticmethod
+    def clean_db():
+        Word.objects.all().delete()
+        Document.objects.all().delete()
+        WordOnPage.objects.all().delete()
+
+    @staticmethod
+    def get_inverted_index():
         """Get a dictionary mapping word_id to doc_id"""
 
         inv_index = defaultdict(set)
 
-        # Iterate through every document, then iterate though every word in the document,
-        # and create a link from the word_id to the doc_id
-        for doc_id, doc in self.documents.iteritems():
-            for word_id, _ in doc.words:
-                inv_index[word_id].add(doc_id)
+        for word in Word.objects.prefetch_related('document_set'):
+            for doc in word.document_set.all():
+                inv_index[word.id].add(doc.id)
 
         return dict(inv_index)
 
-    def get_resolved_inverted_index(self):
+    @staticmethod
+    def get_resolved_inverted_index():
         """Get a dictionary mapping words to urls"""
 
-        unresolved_index = self.get_inverted_index()
         resolved_index = defaultdict(set)
 
-        # Go through each word_id, doc_id pair in inverted index
-        for word_id, doc_ids in unresolved_index.iteritems():
-            # Retrieve word string from the lexicon for this word_id
-            word_str = self.lexicon[word_id]
-            # For every doc_id this word maps to get the url, and create a mapping from word to url
-            for doc_id in doc_ids:
-                resolved_index[word_str].add(self.documents[doc_id].url)
+        for word in Word.objects.prefetch_related('document_set'):
+            for doc in word.document_set.all():
+                resolved_index[word.text].add(doc.url)
 
         return dict(resolved_index)
 
     def crawl(self, depth=2, timeout=3):
         """Crawl the web!"""
-        seen = set()
 
         while len(self._url_queue):
             url, depth_ = self._url_queue.pop()
@@ -343,15 +281,8 @@ class Crawler(object):
             if depth_ > depth:
                 continue
 
-            self._curr_document = Document()
-
-            doc_id = self.document_id(url)
-
-            # we've already seen this document
-            if doc_id in seen:
+            if Document.objects.filter(url=url).exists():
                 continue
-
-            seen.add(doc_id) # mark this document as visited
 
             socket = None
             file_stream = None
@@ -363,8 +294,8 @@ class Crawler(object):
                     file_stream = open(url, 'r')
                     soup = BeautifulSoup(file_stream)
 
+                self._curr_document = Document.objects.create()
                 self._curr_document.url = url
-                self._curr_document.id = doc_id
                 self._curr_description_words = []
                 self._curr_depth = depth_ + 1
                 self._font_size = 0
@@ -374,8 +305,10 @@ class Crawler(object):
                 if not self._curr_document.description:
                     self._curr_document.description = " ".join(self._curr_description_words[:25])
 
+                self._curr_document.save()
+
                 print "    url = " + repr(self._curr_document.url)
-                print "    num words = " + str(len(self._curr_document.words))
+                print "    num words = " + str(self._curr_document.words.count())
 
             except Exception as e:
                 print e
@@ -389,25 +322,56 @@ class Crawler(object):
 
 class Command(BaseCommand):
     help = 'Crawls a list of webpages'
+    option_list = BaseCommand.option_list + (
+        make_option('--test',
+                    action='store_true',
+                    dest='test',
+                    default=False,
+                    help='Test the crawler on some local HTML pages'),
+    )
 
-    def handle(self, *args, **options):
-        bot = Crawler(None, "ignored_page_test.txt")
-        bot.crawl(10000) # crawl to a big depth
+    def _handle(self, *args, **options):
+        if options['test']:
+            Crawler.clean_db()
+            bot = Crawler("ignored_page_test.txt")
+            bot.crawl(10000)  # crawl to a big depth
 
-        assert (len(bot.lexicon) == 8) # manually counted 8 unique non-ignored words
-        assert (len(bot.documents) == 1) # only 1 document in list, and it has no links
-        inverted_index = bot.get_resolved_inverted_index()
-        for word in ['this', 'page', 'should', 'include', 'this', 'text']:
-            pages = inverted_index[word]
+            assert (Document.objects.count() == 1)  # only 1 document in list, and it has no links
+            inverted_index = bot.get_resolved_inverted_index()
+            for word in ['this', 'page', 'should', 'include', 'this', 'text']:
+                pages = inverted_index[word]
 
-            # All words appear only in 'ignored_test.html'
-            assert (len(pages) == 1)
-            assert ('ignored_test.html' in pages)
+                # All words appear only in 'ignored_test.html'
+                assert (len(pages) == 1)
+                assert ('ignored_test.html' in pages)
 
-        bot = Crawler(None, "pages_crawl_test.txt")
-        bot.crawl(10000) # crawl to a big depth
-        assert (len(bot.documents) == 5) # total of 5 pages in this crawl
-        inverted_index = bot.get_resolved_inverted_index()
-        assert (len(inverted_index['crawl']) == 5) # 'crawl' occurs in all 5 pages
-        assert (len(inverted_index['fifth']) == 1) # 'fifth' occur in all 1 page
-        assert ('second_page.html' in inverted_index['fifth']) # 'fifth' occurs in 'second_page.html'
+            Crawler.clean_db()
+
+            bot = Crawler("pages_crawl_test.txt")
+            bot.crawl(10000)  # crawl to a big depth
+            assert (Document.objects.count() == 5)  # total of 5 pages in this crawl
+            inverted_index = bot.get_resolved_inverted_index()
+            assert (len(inverted_index['crawl']) == 5)  # 'crawl' occurs in all 5 pages
+            assert (len(inverted_index['fifth']) == 1)  # 'fifth' occur in all 1 page
+            assert ('second_page.html' in inverted_index['fifth'])  # 'fifth' occurs in 'second_page.html'
+
+            Crawler.clean_db()
+            return
+
+        bot = Crawler("ignored_page_test.txt")
+        bot.crawl(10000)  # crawl to a big depth
+
+        bot = Crawler("pages_crawl_test.txt")
+        bot.crawl(10000)  # crawl to a big depth
+
+        #    def handle(self, *args, **options):
+        #        profiler = Profile()
+        #        profiler.runcall(self._handle, *args, **options)
+        #        s = StringIO.StringIO()
+        #        sortby = 'cumulative'
+        #        ps = pstats.Stats(profiler, stream=s).sort_stats(sortby)
+        #        ps.print_stats()
+        #        print s.getvalue()
+        #
+        #from cProfile import Profile
+        #import pstats, StringIO
