@@ -1,14 +1,14 @@
 from collections import Counter
 from collections import OrderedDict
 import operator
-
+from django.core import serializers
 from django.shortcuts import render
-
-from ding.models import SearchWord
-
+from django.http import HttpResponse
+from ding.models import SearchWord, Document
 
 # Does setup work and renders the search page
 def search(request):
+    print "here"
     # Retrieve all the keywords in the database
     set_sw = SearchWord.objects.all()
     list_sw = list(set_sw)
@@ -50,4 +50,14 @@ def parsed_query(request):
     # Prepares the input and passes is it in to the HTML page to be rendered
     context.update({'numOfWords': str(len(split_query))})
     context.update({'shouldShowTable': shouldShowTable})
+
+    # Prepare list of results to be presented
+    # TODO: don't display all docs
+    context.update({'documents': Document.objects.all()})
+
     return render(request, 'ding/parsed_query.html', context)
+
+def get_search_results(request, result_num):
+    data = serializers.serialize('json', Document.objects.all(), fields=('title','url', 'description'))
+    return HttpResponse(data, mimetype="application/json")
+

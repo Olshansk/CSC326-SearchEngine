@@ -1,5 +1,6 @@
 .search-results-list {
-  list-style-type: none; }
+  list-style-type: none;
+  padding-top: 75px; }
 
 .inline {
   display: inline; }
@@ -16,7 +17,9 @@
   width: 50%; }
 
 .gray-background {
-  background-color: #EDEDED; }
+  background-color: #EDEDED;
+  position: fixed;
+  top: 0; }
 
 .logo {
   color: #BE0011; }

@@ -1,5 +1,6 @@
 .search-results-list {
     list-style-type: none;
+    padding-top:75px;
 }
 
 .inline {
@@ -22,6 +23,8 @@
 
 .gray-background {
     background-color:#EDEDED;
+    position:fixed;
+    top:0;
 }
 
 .logo {

@@ -1,11 +1,29 @@
+<!DOCTYPE html>
+
 {% load static %}
 {% load staticfiles %}
 {% get_static_prefix as STATIC_PREFIX %}
 
 <link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/bootstrap.min.css"></link>
 <link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/parsed_query.css"></link>
+<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/search_result.css"></link>
 <script type="text/javascript" src="{{ STATIC_PREFIX }}ding/jquery-2.0.3.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/handlebars.js"></script>
+<script id="search_result" type="text/x-handlebars-template">
+ 	<div>
+ 		{% verbatim %}
+		<h1 class="title">
+			<a href={{temp}}> {{title}}</a>
+		</h1>
+		<cite class="source"> {{url}} </cite>
+		<p>{{description}} </p>
+		{% endverbatim %}
+	</div>
+</script>
 <script type="text/javascript" src="{{ STATIC_PREFIX }}ding/parsed_query.js"></script>
+
+
+
 
 <div class="gray-background">
 	<div class="search-block">
@@ -31,6 +49,15 @@
   		</div>
 	</div>
 </div>
+
+<ul class="search-results-list">
+	{% for field in documents %}
+		<li>
+		{% include "ding/search_result.html" with title=field.title url=field.url description=field.description %}
+		</li>
+	{% endfor %}
+</ul>
+
 <div class = "search-results">
 	<h1>Searched: {{query}}</h1>
 	<h1>Number Of Words: {{numOfWords}}</h1>

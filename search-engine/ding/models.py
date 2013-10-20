@@ -27,6 +27,11 @@ class Document(models.Model):
     def __unicode__(self):
         return self.url
 
+    def to_dict(self):
+        # Don't include words becaues they're not needed in result
+        return { 'url':self.url,
+                 'title':self.title,
+                 'description':self.description }
 
 class WordOnPage(models.Model):
     word = models.ForeignKey(Word)
