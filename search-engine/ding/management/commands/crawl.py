@@ -5,11 +5,12 @@ import urlparse
 from collections import defaultdict
 import re
 from optparse import make_option
-
+from cProfile import Profile
+import pstats
+import StringIO
 from django.core.management.base import BaseCommand
 from BeautifulSoup import *
-
-from ding.models import Word, Document, WordOnPage
+from ding.models import Word, Document, WordOccurrence
 
 
 WORD_SEPARATORS = re.compile(r'\s|\n|\r|\t|[^a-zA-Z0-9\-_]')
@@ -86,6 +87,8 @@ class Crawler(object):
         self._font_size = 0
         self._curr_description_words = []
         self._curr_document = None
+        self._words_found = []
+        self._unique_words = []
 
         # get all urls into the queue
         try:
@@ -127,7 +130,7 @@ class Crawler(object):
         """Called when visiting the <title> tag."""
         title_text = self._text_of(elem).strip()
         self._curr_document.title = title_text
-        print "document title=" + repr(title_text)
+        print "    document title=" + repr(title_text)
 
     def _visit_a(self, elem):
         """Called when visiting <a> tags."""
@@ -148,14 +151,13 @@ class Crawler(object):
 
         # TODO add title/alt/text to index for destination url
 
-
     def _enter_meta(self, elem):
         """Check meta tag for description"""
         if self._attr(elem, "name") == "description":
             self._curr_document.description = self._attr(elem, "content")
 
     def _increase_font_factor(self, factor):
-        """Increade/decrease the current font size."""
+        """Increase/decrease the current font size."""
 
         def increase_it(elem):
             self._font_size += factor
@@ -178,10 +180,7 @@ class Crawler(object):
             if word in self._ignored_words:
                 continue
 
-            word_created, _ = Word.objects.get_or_create(text=word)
-            WordOnPage.objects.get_or_create(word=word_created,
-                                             document=self._curr_document,
-                                             font_size=self._font_size)
+            self._words_found.append((word, self._font_size))
 
     def _text_of(self, elem):
         """Get the text inside some element without any tags."""
@@ -194,7 +193,7 @@ class Crawler(object):
         else:
             return elem.string
 
-    def _index_document(self, soup):
+    def _index_document(self, soup_data):
         """Traverse the document in depth-first order and call functions when entering
         and leaving tags. When we come across some text, add it into the index. This
         handles ignoring tags that we have no business looking at."""
@@ -207,8 +206,8 @@ class Crawler(object):
             def __init__(self, obj):
                 self.next = obj
 
-        tag = soup.html
-        stack = [DummyTag(), soup.html]
+        tag = soup_data.html
+        stack = [DummyTag(), soup_data.html]
 
         while tag and tag.next:
             tag = tag.next
@@ -243,9 +242,11 @@ class Crawler(object):
 
     @staticmethod
     def clean_db():
+        """Remove all words and documents from database"""
+
         Word.objects.all().delete()
         Document.objects.all().delete()
-        WordOnPage.objects.all().delete()
+        WordOccurrence.objects.all().delete()
 
     @staticmethod
     def get_inverted_index():
@@ -271,6 +272,51 @@ class Crawler(object):
 
         return dict(resolved_index)
 
+    def _batch_query_words(self):
+        """Query the database for word rows corresponding to words found in
+        the current document, and return it as dictionary mapping word strings
+        to the word row (represented by a Word object)"""
+
+        word_dict = {}
+
+        for x in xrange(0, len(self._unique_words), 999):
+            chunk_of_word_list = self._unique_words[x:x + 999]
+            for word_in_db in Word.objects.filter(text__in=chunk_of_word_list):
+                word_dict[word_in_db.text] = word_in_db
+
+        return word_dict
+
+    def _save_only_words(self):
+        """Save words to the database"""
+
+        words_to_bulk_create = []
+        queried_words = self._batch_query_words()
+
+        for word in self._unique_words:
+            if word not in queried_words:
+                words_to_bulk_create.append(Word(text=word))
+        Word.objects.bulk_create(words_to_bulk_create)
+
+    def _save_word_occurrences(self):
+        """Save words to document relationship to database"""
+
+        word_occurrences = []
+        queried_words = self._batch_query_words()
+
+        for word, font_size in self._words_found:
+            word_occurrences.append(WordOccurrence(word=queried_words[word],
+                                                   document=self._curr_document,
+                                                   font_size=font_size))
+
+        WordOccurrence.objects.bulk_create(word_occurrences)
+
+    def _save_words(self):
+        """Save words and words to documents relationship to database"""
+
+        self._unique_words = list(set(map(lambda w: w[0], self._words_found)))
+        self._save_only_words()
+        self._save_word_occurrences()
+
     def crawl(self, depth=2, timeout=3):
         """Crawl the web!"""
 
@@ -281,38 +327,44 @@ class Crawler(object):
             if depth_ > depth:
                 continue
 
+            if url.startswith("http"):
+                parsed_url = urlparse.urlparse(url)
+                url = parsed_url.scheme + "://" + parsed_url.netloc + parsed_url.path
+
             if Document.objects.filter(url=url).exists():
                 continue
 
             socket = None
             file_stream = None
             try:
-                if url.startswith("http://"):
+                if url.startswith("http"):
                     socket = urllib2.urlopen(url, timeout=timeout)
-                    soup = BeautifulSoup(socket.read())
+                    soup_data = BeautifulSoup(socket.read())
                 else:
                     file_stream = open(url, 'r')
-                    soup = BeautifulSoup(file_stream)
+                    soup_data = BeautifulSoup(file_stream)
 
                 self._curr_document = Document.objects.create()
                 self._curr_document.url = url
                 self._curr_description_words = []
                 self._curr_depth = depth_ + 1
                 self._font_size = 0
-                self._index_document(soup)
+                self._words_found = []
+
+                print "url = " + repr(self._curr_document.url)
+                self._index_document(soup_data)
 
                 # If description from meta tag wasn't detected, fallback to the first 25 words detected instead
                 if not self._curr_document.description:
                     self._curr_document.description = " ".join(self._curr_description_words[:25])
 
                 self._curr_document.save()
+                self._save_words()
 
-                print "    url = " + repr(self._curr_document.url)
-                print "    num words = " + str(self._curr_document.words.count())
+                print "    num words = " + str(len(self._words_found))
 
             except Exception as e:
-                print e
-                pass
+                print 'exception: ' + str(e)
             finally:
                 if socket:
                     socket.close()
@@ -328,9 +380,15 @@ class Command(BaseCommand):
                     dest='test',
                     default=False,
                     help='Test the crawler on some local HTML pages'),
+        make_option('--profile',
+                    action='store_true',
+                    dest='profile',
+                    default=False,
+                    help='Profile the crawler'),
     )
 
-    def handle(self, *args, **options):
+    @staticmethod
+    def _handle(*args, **options):
         if options['test']:
             Crawler.clean_db()
             bot = Crawler("ignored_page_test.txt")
@@ -356,22 +414,17 @@ class Command(BaseCommand):
             assert ('second_page.html' in inverted_index['fifth'])  # 'fifth' occurs in 'second_page.html'
 
             Crawler.clean_db()
-            return
+        else:
+            bot = Crawler("urls.txt")
+            bot.crawl(1)
 
-        bot = Crawler("ignored_page_test.txt")
-        bot.crawl(10000)  # crawl to a big depth
+    def handle(self, *args, **options):
+        if options['profile']:
+            profiler = Profile()
+            s = StringIO.StringIO()
 
-        bot = Crawler("pages_crawl_test.txt")
-        bot.crawl(10000)  # crawl to a big depth
-
-        #    def handle(self, *args, **options):
-        #        profiler = Profile()
-        #        profiler.runcall(self._handle, *args, **options)
-        #        s = StringIO.StringIO()
-        #        sortby = 'cumulative'
-        #        ps = pstats.Stats(profiler, stream=s).sort_stats(sortby)
-        #        ps.print_stats()
-        #        print s.getvalue()
-        #
-        #from cProfile import Profile
-        #import pstats, StringIO
+            profiler.runcall(self._handle, *args, **options)
+            pstats.Stats(profiler, stream=s).sort_stats('cumulative').print_stats()
+            print s.getvalue()
+        else:
+            self._handle(self, *args, **options)
