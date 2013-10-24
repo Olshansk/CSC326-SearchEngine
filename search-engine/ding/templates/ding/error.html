@@ -1,0 +1,26 @@
+{% load static %}
+{% load staticfiles %}
+{% get_static_prefix as STATIC_PREFIX %}
+
+<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/bootstrap.min.css"></link>
+<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/error.css"></link>
+
+<div>
+	<div class="ringing-bell-block">
+		<img src="{{STATIC_PREFIX}}ding/images/logo_ringing.png"/>
+	</div>
+	<div class="error-block">
+		<h1 class="logo-text">
+			<a class="home-link" href="http://localhost:8000/ding/">
+				ding
+				<!--<img class ="logo-image" src="{{STATIC_PREFIX}}ding/images/logo.png"/>-->
+			</a>
+			
+		</h1>
+		</p>
+			<b>{{error_type}}.</b>
+			That's an error.
+		</p>
+		<h1> Time to get back to school. </h1>
+	</div>
+</div>

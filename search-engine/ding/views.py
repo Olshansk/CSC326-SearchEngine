@@ -61,3 +61,18 @@ def get_search_results(request, result_num):
     data = serializers.serialize('json', Document.objects.all(), fields=('title','url', 'description'))
     return HttpResponse(data, mimetype="application/json")
 
+def error_400(request):
+    error = {'error_type': 400, 'request_path': request.path}
+    return render(request, 'ding/error.html', error, status=400)
+
+def error_403(request):
+    error = {'error_type': 403, 'request_path': request.path}
+    return render(request, 'ding/error.html', error, status=403)
+
+def error_404(request):
+    error = {'error_type': 404, 'request_path': request.path}
+    return render(request, 'ding/error.html', error, status=404)
+
+def error_500(request):
+    error = {'error_type': 500, 'request_path': request.path}
+    return render(request, template, error , status=500)

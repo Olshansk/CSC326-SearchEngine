@@ -1,0 +1,23 @@
+.home-link {
+  color: #be0011; }
+  .home-link:link, .home-link:visited, .home-link:hover, .home-link:active {
+    color: #be0011; }
+
+.logo-text {
+  font-family: Georgia;
+  font-size: 60px;
+  color: #be0011; }
+
+.logo-image {
+  vertical-align: middle;
+  width: 80px;
+  height: 80x; }
+
+.error-block {
+  margin-left: 50px;
+  margin-top: 60px;
+  display: inline-block; }
+
+.ringing-bell-block {
+  display: inline-block;
+  float: left; }

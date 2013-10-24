@@ -2,6 +2,8 @@ from django.conf.urls import patterns, include, url
 
 # Uncomment the next two lines to enable the admin:
 from django.contrib import admin
+from ding import views
+
 admin.autodiscover()
 
 urlpatterns = patterns('',
@@ -17,4 +19,8 @@ urlpatterns = patterns('',
                        url(r'^admin/', include(admin.site.urls)),
 )
 
-#handler404 = 'ding.views.parsed_query'
+handler400 = 'ding.views.error_400'
+handler403 = 'ding.views.error_403'
+handler404 = 'ding.views.error_404'
+handler500 = 'ding.views.error_500'
+

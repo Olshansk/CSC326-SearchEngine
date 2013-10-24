@@ -1,0 +1,31 @@
+$logo-color: #BE0011;
+
+.home-link {
+	color:$logo-color;
+	&:link, &:visited, &:hover, &:active {
+		color:$logo-color;
+	}
+}
+
+.logo-text {
+	font-family:Georgia;
+	font-size:60px;
+	color:$logo-color;
+}
+
+.logo-image {
+	vertical-align: middle;
+	width:80px;
+	height:80x;
+}
+
+.error-block {
+	margin-left:50px;	
+	margin-top:60px;
+	display:inline-block;
+}
+
+.ringing-bell-block {
+	display:inline-block;
+	float:left;
+}
