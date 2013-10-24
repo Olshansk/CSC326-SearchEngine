@@ -6,6 +6,8 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from ding.models import SearchWord, Document
 
+RESULTS_PER_PAGE = 5
+
 # Does setup work and renders the search page
 def search(request):
     print "here"
@@ -53,13 +55,23 @@ def parsed_query(request):
 
     # Prepare list of results to be presented
     # TODO: don't display all docs
-    context.update({'documents': Document.objects.all()})
+    filteredDocs = document_objects_for_keyword_in_range(0, "temp")
+    context.update({'documents': filteredDocs})
 
     return render(request, 'ding/parsed_query.html', context)
 
 def get_search_results(request, result_num):
-    data = serializers.serialize('json', Document.objects.all(), fields=('title','url', 'description'))
-    return HttpResponse(data, mimetype="application/json")
+    filteredDocs = document_objects_for_keyword_in_range(int(result_num), "temp")
+    jsonData = serializers.serialize('json', filteredDocs, fields=('title','url', 'description'))
+    return HttpResponse(jsonData, mimetype="application/json")
+
+def document_objects_for_keyword_in_range(first_index, keyword):
+    #TODO: retrieve objects coresponding to a keyword
+    documentObejcts = list(Document.objects.all())
+    #TODO: change this to use page rank instead of ids
+    documentObejcts.sort(cmp = lambda x, y: cmp(x.id, y.id))
+    filteredData = documentObejcts[first_index * RESULTS_PER_PAGE: (first_index + 1) * RESULTS_PER_PAGE]
+    return filteredData
 
 def error_400(request):
     error = {'error_type': 400, 'request_path': request.path}
@@ -75,4 +87,4 @@ def error_404(request):
 
 def error_500(request):
     error = {'error_type': 500, 'request_path': request.path}
-    return render(request, template, error , status=500)
+    return render(request, 'ding/error.html', error , status=500)
