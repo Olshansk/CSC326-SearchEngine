@@ -10,9 +10,28 @@ class WordOccurrenceInline(admin.TabularInline):
     raw_id_fields = ("word",)
 
 
+class OutgoingLinksInline(admin.TabularInline):
+    model = Document.outgoing_links.through
+    extra = 1
+    fk_name = "from_document"
+    raw_id_fields = ("to_document",)
+    verbose_name = "Outgoing link"
+    verbose_name_plural = "Outgoing links"
+
+
+class IncomingLinksInline(admin.TabularInline):
+    model = Document.outgoing_links.through
+    extra = 1
+    fk_name = "to_document"
+    raw_id_fields = ("from_document",)
+    verbose_name = "Incoming link"
+    verbose_name_plural = "Incoming links"
+
+
 class DocumentAdmin(admin.ModelAdmin):
-    inlines = (WordOccurrenceInline,)
-    list_display = ('url', 'title', 'description')
+    inlines = (WordOccurrenceInline, OutgoingLinksInline, IncomingLinksInline)
+    list_display = ('url', 'id', 'title', 'description', 'visited')
+    exclude = ("outgoing_links",)
 
 
 class WordAdmin(admin.ModelAdmin):

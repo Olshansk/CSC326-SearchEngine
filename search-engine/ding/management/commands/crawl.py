@@ -11,6 +11,8 @@ import StringIO
 from django.core.management.base import BaseCommand
 from BeautifulSoup import *
 from ding.models import Word, Document, WordOccurrence
+import sys
+import traceback
 
 
 WORD_SEPARATORS = re.compile(r'\s|\n|\r|\t|[^a-zA-Z0-9\-_]')
@@ -88,6 +90,7 @@ class Crawler(object):
         self._curr_description_words = []
         self._curr_document = None
         self._words_found = []
+        self._outgoing_urls = []
         self._unique_words = []
 
         # get all urls into the queue
@@ -121,11 +124,6 @@ class Crawler(object):
         except:
             return ""
 
-    def add_link(self, from_doc_id, to_doc_id):
-        """Add a link into the database, or increase the number of links between
-        two pages in the database."""
-        # TODO
-
     def _visit_title(self, elem):
         """Called when visiting the <title> tag."""
         title_text = self._text_of(elem).strip()
@@ -145,9 +143,7 @@ class Crawler(object):
         # add the just found URL to the url queue
         self._url_queue.append((dest_url, self._curr_depth))
 
-        # add a link entry into the database from the current document to the
-        # other document
-        # self.add_link(self._curr_document.id, self.document_id(dest_url))
+        self._outgoing_urls.append(dest_url)
 
         # TODO add title/alt/text to index for destination url
 
@@ -311,11 +307,54 @@ class Crawler(object):
         WordOccurrence.objects.bulk_create(word_occurrences)
 
     def _save_words(self):
-        """Save words and words to documents relationship to database"""
+        """Save words and words-to-documents relationship to database"""
 
         self._unique_words = list(set(map(lambda w: w[0], self._words_found)))
         self._save_only_words()
         self._save_word_occurrences()
+
+    def _batch_query_documents(self):
+        """Query the database for document rows corresponding to outgoing links
+        found in the current document, and return it as dictionary mapping urls
+        to the document row (represented by a Document object)"""
+
+        doc_dict = {}
+
+        for x in xrange(0, len(self._outgoing_urls), 999):
+            chunk_of_doc_list = self._outgoing_urls[x:x + 999]
+            for doc_in_db in Document.objects.filter(url__in=chunk_of_doc_list):
+                doc_dict[doc_in_db.url] = doc_in_db
+
+        return doc_dict
+
+    def _save_outgoing_links(self):
+        """Save outgoing links to the database"""
+
+        docs_to_bulk_create = []
+        queried_docs = self._batch_query_documents()
+
+        for url in self._outgoing_urls:
+            if url not in queried_docs:
+                docs_to_bulk_create.append(Document(url=url))
+        Document.objects.bulk_create(docs_to_bulk_create)
+
+    def _save_document(self):
+        """Save document and document-to-document relationship to database"""
+
+        self._outgoing_urls = list(set(self._outgoing_urls))
+
+        self._curr_document.save()
+
+        self._save_outgoing_links()
+
+        queried_docs = self._batch_query_documents()
+        self._curr_document.outgoing_links.add(*queried_docs.values())
+
+    def _save(self):
+        """Save all data obtained while crawling current page to database"""
+
+        self._save_document()
+        self._save_words()
 
     def crawl(self, depth=2, timeout=3):
         """Crawl the web!"""
@@ -327,12 +366,13 @@ class Crawler(object):
             if depth_ > depth:
                 continue
 
-            if url.startswith("http"):
-                parsed_url = urlparse.urlparse(url)
-                url = parsed_url.scheme + "://" + parsed_url.netloc + parsed_url.path
+            self._curr_document = None
 
-            if Document.objects.filter(url=url).exists():
-                continue
+            doc_from_db = Document.objects.filter(url=url)
+            if doc_from_db.exists():
+                self._curr_document = doc_from_db[0]
+                if self._curr_document.visited:
+                    continue
 
             socket = None
             file_stream = None
@@ -344,12 +384,15 @@ class Crawler(object):
                     file_stream = open(url, 'r')
                     soup_data = BeautifulSoup(file_stream)
 
-                self._curr_document = Document.objects.create()
-                self._curr_document.url = url
+                # Create new document in db if we haven't already retrieved it from above
+                if not self._curr_document:
+                    self._curr_document = Document(url=url)
+
                 self._curr_description_words = []
                 self._curr_depth = depth_ + 1
                 self._font_size = 0
                 self._words_found = []
+                self._outgoing_urls = []
 
                 print "url = " + repr(self._curr_document.url)
                 self._index_document(soup_data)
@@ -358,13 +401,17 @@ class Crawler(object):
                 if not self._curr_document.description:
                     self._curr_document.description = " ".join(self._curr_description_words[:25])
 
-                self._curr_document.save()
-                self._save_words()
+                self._curr_document.visited = True
+                self._save()
 
+                print "    description = " + str(self._curr_document.description)
                 print "    num words = " + str(len(self._words_found))
 
             except Exception as e:
-                print 'exception: ' + str(e)
+                print "Exception in user code: " + str(e)
+                print '-'*60
+                traceback.print_exc(file=sys.stdout)
+                print '-'*60
             finally:
                 if socket:
                     socket.close()
@@ -427,4 +474,4 @@ class Command(BaseCommand):
             pstats.Stats(profiler, stream=s).sort_stats('cumulative').print_stats()
             print s.getvalue()
         else:
-            self._handle(self, *args, **options)
+            Command._handle(*args, **options)

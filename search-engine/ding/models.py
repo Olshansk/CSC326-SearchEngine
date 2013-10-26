@@ -14,12 +14,20 @@ class SearchWord(models.Model):
 class Word(models.Model):
     text = models.TextField()
 
+    def __unicode__(self):
+        return self.text
+
 
 class Document(models.Model):
     url = models.URLField()
     words = models.ManyToManyField(Word, through='WordOccurrence')
     title = models.TextField()
     description = models.TextField()
+    outgoing_links = models.ManyToManyField('self', related_name='incoming_links', symmetrical=False)
+    visited = models.BooleanField(default=False)
+
+    def __unicode__(self):
+        return self.url
 
     def __unicode__(self):
         return self.url
