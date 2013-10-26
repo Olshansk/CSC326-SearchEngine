@@ -10,7 +10,7 @@ import pstats
 import StringIO
 from django.core.management.base import BaseCommand
 from BeautifulSoup import *
-from ding.models import Word, Document, WordOccurrence
+from ding.models import Word, Document, WordOccurrence, DocumentLink
 import sys
 import traceback
 
@@ -90,7 +90,7 @@ class Crawler(object):
         self._curr_description_words = []
         self._curr_document = None
         self._words_found = []
-        self._outgoing_urls = []
+        self._outgoing_urls = defaultdict(lambda: 0)
         self._unique_words = []
 
         # get all urls into the queue
@@ -143,7 +143,7 @@ class Crawler(object):
         # add the just found URL to the url queue
         self._url_queue.append((dest_url, self._curr_depth))
 
-        self._outgoing_urls.append(dest_url)
+        self._outgoing_urls[dest_url] += 1
 
         # TODO add title/alt/text to index for destination url
 
@@ -321,34 +321,38 @@ class Crawler(object):
         doc_dict = {}
 
         for x in xrange(0, len(self._outgoing_urls), 999):
-            chunk_of_doc_list = self._outgoing_urls[x:x + 999]
+            chunk_of_doc_list = self._outgoing_urls.keys()[x:x + 999]
             for doc_in_db in Document.objects.filter(url__in=chunk_of_doc_list):
                 doc_dict[doc_in_db.url] = doc_in_db
 
         return doc_dict
 
-    def _save_outgoing_links(self):
+    def _save_new_outgoing_docs(self):
         """Save outgoing links to the database"""
 
         docs_to_bulk_create = []
         queried_docs = self._batch_query_documents()
 
-        for url in self._outgoing_urls:
+        for url, _ in self._outgoing_urls.iteritems():
             if url not in queried_docs:
                 docs_to_bulk_create.append(Document(url=url))
         Document.objects.bulk_create(docs_to_bulk_create)
 
+    def _save_outgoing_links(self):
+        doc_links = []
+        queried_docs = self._batch_query_documents()
+        for url, url_count in self._outgoing_urls.iteritems():
+            doc_links.append(DocumentLink(incoming_link=self._curr_document,
+                                          outgoing_link=queried_docs[url],
+                                          count=url_count))
+        DocumentLink.objects.bulk_create(doc_links)
+
     def _save_document(self):
         """Save document and document-to-document relationship to database"""
 
-        self._outgoing_urls = list(set(self._outgoing_urls))
-
         self._curr_document.save()
-
+        self._save_new_outgoing_docs()
         self._save_outgoing_links()
-
-        queried_docs = self._batch_query_documents()
-        self._curr_document.outgoing_links.add(*queried_docs.values())
 
     def _save(self):
         """Save all data obtained while crawling current page to database"""
@@ -392,7 +396,7 @@ class Crawler(object):
                 self._curr_depth = depth_ + 1
                 self._font_size = 0
                 self._words_found = []
-                self._outgoing_urls = []
+                self._outgoing_urls = defaultdict(lambda: 0)
 
                 print "url = " + repr(self._curr_document.url)
                 self._index_document(soup_data)

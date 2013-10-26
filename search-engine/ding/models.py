@@ -23,16 +23,20 @@ class Document(models.Model):
     words = models.ManyToManyField(Word, through='WordOccurrence')
     title = models.TextField()
     description = models.TextField()
-    outgoing_links = models.ManyToManyField('self', related_name='incoming_links', symmetrical=False)
+    outgoing_links = models.ManyToManyField('self', through='DocumentLink', symmetrical=False)
     visited = models.BooleanField(default=False)
 
     def __unicode__(self):
         return self.url
 
-    def __unicode__(self):
-        return self.url
 
 class WordOccurrence(models.Model):
     word = models.ForeignKey(Word)
     document = models.ForeignKey(Document)
-    font_size = models.IntegerField()
+    font_size = models.IntegerField(default=0)
+
+
+class DocumentLink(models.Model):
+    outgoing_link = models.ForeignKey(Document, related_name="outgoing_link")
+    incoming_link = models.ForeignKey(Document, related_name="incoming_link")
+    count = models.IntegerField(default=1)

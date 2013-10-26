@@ -1,7 +1,7 @@
 __author__ = 'Amandeep Grewal'
 
 from django.contrib import admin
-from ding.models import Word, Document, WordOccurrence
+from ding.models import Word, Document, WordOccurrence, DocumentLink
 
 
 class WordOccurrenceInline(admin.TabularInline):
@@ -11,19 +11,19 @@ class WordOccurrenceInline(admin.TabularInline):
 
 
 class OutgoingLinksInline(admin.TabularInline):
-    model = Document.outgoing_links.through
+    model = DocumentLink
     extra = 1
-    fk_name = "from_document"
-    raw_id_fields = ("to_document",)
+    fk_name = "incoming_link"
+    raw_id_fields = ("outgoing_link",)
     verbose_name = "Outgoing link"
     verbose_name_plural = "Outgoing links"
 
 
 class IncomingLinksInline(admin.TabularInline):
-    model = Document.outgoing_links.through
+    model = DocumentLink
     extra = 1
-    fk_name = "to_document"
-    raw_id_fields = ("from_document",)
+    fk_name = "outgoing_link"
+    raw_id_fields = ("incoming_link",)
     verbose_name = "Incoming link"
     verbose_name_plural = "Incoming links"
 
@@ -31,7 +31,6 @@ class IncomingLinksInline(admin.TabularInline):
 class DocumentAdmin(admin.ModelAdmin):
     inlines = (WordOccurrenceInline, OutgoingLinksInline, IncomingLinksInline)
     list_display = ('url', 'id', 'title', 'description', 'visited')
-    exclude = ("outgoing_links",)
 
 
 class WordAdmin(admin.ModelAdmin):
@@ -40,5 +39,6 @@ class WordAdmin(admin.ModelAdmin):
 
 
 admin.site.register(WordOccurrence)
+admin.site.register(DocumentLink)
 admin.site.register(Document, DocumentAdmin)
 admin.site.register(Word, WordAdmin)
