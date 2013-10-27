@@ -1,4 +1,5 @@
 var numResultsLoaded = 0;
+var noMoreResults = false;
 
 $(document).ready(function (){    
     validate();
@@ -55,6 +56,9 @@ function scroll(){
         var query = getURLParameter("query")
         var url = 'http://localhost:8000/ding/parsed_query/' + query + "/" + numResultsLoaded + '/';
     	console.log("near bottom!" + numResultsLoaded + url);
+        if (noMoreResults) {
+            return;
+        }
     	$.ajax({
     		url : url,
     		dataType : 'json',
@@ -62,7 +66,7 @@ function scroll(){
     		success: function(data)
 		    {
                 if (data.length == 0) {
-                    numResultsLoaded--;
+                    noMoreResults = true;
                 } else {
                     $.each(data, function(index) {
 		        	     var source = $("#search_result").html();

@@ -21,7 +21,7 @@ def search(request):
     for s in list_sw[0:20]:
         words.update({s.word_text: s.word_freq})
         # Passes in the dictionary as input and renders the search html page
-    context = {'frequencyDictionary': words.iteritems()}
+    context = {'frequency_dictionary': words.iteritems()}
     return render(request, 'ding/search.html', context)
 
 # Does setup work and renders the results page
@@ -31,14 +31,14 @@ def parsed_query(request):
     query = request.GET['query']
 
     context = {'query': query}
-    shouldShowTable = False
+    should_show_table = False
     # Splits the search query into words
     split_query = query.split()
     for word in split_query:
         # Increments the count of each keyword if its already in the databse
         # or adds it to the database if this is the first time it is encountered
         list_sw = SearchWord.objects.filter(word_text=word)
-        if (len(list_sw) == 0):
+        if len(list_sw) == 0:
             sw = SearchWord(word_text=word, word_freq=1)
             sw.save()
         else:
@@ -47,30 +47,28 @@ def parsed_query(request):
             sw.save()
 
     # Determines if the table should or shouldn't be shown
-    if (len(split_query) > 1):
-        shouldShowTable = True
-        context.update({'frequencyDictionary': Counter(split_query).iteritems()})
+    if len(split_query) > 1:
+        should_show_table = True
+        context.update({'frequency_dictionary': Counter(split_query).iteritems()})
 
     # Prepares the input and passes is it in to the HTML page to be rendered
-    context.update({'numOfWords': str(len(split_query))})
-    context.update({'shouldShowTable': shouldShowTable})
+    context.update({'num_of_words': str(len(split_query))})
+    context.update({'should_show_table': should_show_table})
     # Prepare list of results to be presented
-    # TODO: don't display all docs
-    filteredDocs = document_objects_for_keyword_in_range(0, "temp")
+    # TODO: search using all keywords
+    filteredDocs = document_objects_for_keyword_in_range(0, split_query[0])
     context.update({'documents': filteredDocs})
 
     return render(request, 'ding/parsed_query.html', context)
 
 def get_search_results(request, query, scroll_num):
-    print "get_search_results"
-    filteredDocs = document_objects_for_keyword_in_range(int(scroll_num), "temp")
+    filteredDocs = document_objects_for_keyword_in_range(int(scroll_num), query)
     jsonData = serializers.serialize('json', filteredDocs, fields=('title','url', 'description'))
     return HttpResponse(jsonData, mimetype="application/json")
 
 def document_objects_for_keyword_in_range(first_index, keyword):
-    #TODO: retrieve objects coresponding to a keyword
-    #TODO: change this to use page rank instead of ids
-    documentObejcts = list(Document.objects.order_by("id")[first_index * RESULTS_PER_PAGE: (first_index + 1) * RESULTS_PER_PAGE])
+    first_key_word = keyword.split("+")[0]
+    documentObejcts = list(Document.objects.filter(words__text = first_key_word).order_by("id")[first_index * RESULTS_PER_PAGE: (first_index + 1) * RESULTS_PER_PAGE])
     return documentObejcts
 
 def error_400(request):
