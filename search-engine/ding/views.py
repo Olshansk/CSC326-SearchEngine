@@ -5,6 +5,7 @@ from django.core import serializers
 from django.shortcuts import render
 from django.http import HttpResponse
 from ding.models import SearchWord, Document
+from ding.forms import QueryForm
 
 RESULTS_PER_PAGE = 5
 
@@ -26,8 +27,10 @@ def search(request):
 
 # Does setup work and renders the results page
 def parsed_query(request):
+    print "parsed_query"
     # Extracts the input to this method; the search query
-    query = request.POST['query'].lower()
+    query = request.GET['query']
+
     context = {'query': query}
     shouldShowTable = False
     # Splits the search query into words
@@ -52,7 +55,6 @@ def parsed_query(request):
     # Prepares the input and passes is it in to the HTML page to be rendered
     context.update({'numOfWords': str(len(split_query))})
     context.update({'shouldShowTable': shouldShowTable})
-
     # Prepare list of results to be presented
     # TODO: don't display all docs
     filteredDocs = document_objects_for_keyword_in_range(0, "temp")
@@ -60,18 +62,17 @@ def parsed_query(request):
 
     return render(request, 'ding/parsed_query.html', context)
 
-def get_search_results(request, result_num):
-    filteredDocs = document_objects_for_keyword_in_range(int(result_num), "temp")
+def get_search_results(request, query, page_num, scroll_num):
+    print "get_search_results"
+    filteredDocs = document_objects_for_keyword_in_range(int(scroll_num), "temp")
     jsonData = serializers.serialize('json', filteredDocs, fields=('title','url', 'description'))
     return HttpResponse(jsonData, mimetype="application/json")
 
 def document_objects_for_keyword_in_range(first_index, keyword):
     #TODO: retrieve objects coresponding to a keyword
-    documentObejcts = list(Document.objects.all())
     #TODO: change this to use page rank instead of ids
-    documentObejcts.sort(cmp = lambda x, y: cmp(x.id, y.id))
-    filteredData = documentObejcts[first_index * RESULTS_PER_PAGE: (first_index + 1) * RESULTS_PER_PAGE]
-    return filteredData
+    documentObejcts = list(Document.objects.order_by("id")[first_index * RESULTS_PER_PAGE: (first_index + 1) * RESULTS_PER_PAGE])
+    return documentObejcts
 
 def error_400(request):
     error = {'error_type': 400, 'request_path': request.path}

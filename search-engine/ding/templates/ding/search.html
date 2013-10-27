@@ -15,7 +15,7 @@
 </div>
 
 <div class="search-block">
-	<form class = "search-form" action="{% url 'ding:parsed_query' %}" method="post">
+	<form class = "search-form" action="{% url 'ding:parsed_query' %}" method="get">
 		{% csrf_token %}
 		<input class="search-field" type="text" name="query">
 		<input class="submit" type="submit" value="Search"/>

@@ -22,7 +22,7 @@
 </script>
 <script type="text/javascript" src="{{ STATIC_PREFIX }}ding/parsed_query.js"></script>
 
-<div class="gray-background">
+<div class="top-bar gray-background">
 	<div class="search-block">
 		<div class="logo inline-block-top-aligned">
 			<img class ="logo-image" src="{{STATIC_PREFIX}}ding/images/logo.png"/>
@@ -32,10 +32,10 @@
 		</div>
 
   		<div class="half inline-block-top-aligned search-field">
-  			<form class="search-form" method="post" action="{% url 'ding:parsed_query' %}">
+  			<form class="search-form" method="get" action="{% url 'ding:parsed_query' %}">
     			<div class="input-group">
     				{% csrf_token %}
-      				<input class="form-control" type="text" name="query"/>
+      				<input class="form-control" type="text" value = {{query}} name="query"/>
       				<span class="input-group-btn">
       					<button class="btn btn-default" type="button submit" value="Search">
 							<img class ="search-image" src="{{STATIC_PREFIX}}ding/images/search-icon.png"/>
@@ -54,6 +54,8 @@
 		</li>
 	{% endfor %}
 </ul>
+
+<!--
 
 <div class = "search-results">
 	<h1>Searched: {{query}}</h1>
@@ -75,4 +77,10 @@
 		</table>
 	
 	{% endif %}
+</div>
+
+-->
+
+<div class="bottom-bar gray-background">
+	<p class="copyright-text">© 2013 Amandeep and Olshansky. All Rights Reserved</p>
 </div>

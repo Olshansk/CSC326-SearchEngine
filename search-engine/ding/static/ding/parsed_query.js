@@ -43,22 +43,34 @@ $(document).ajaxSend(function(event, xhr, settings) {
     }
 });
 
+function getURLParameter(name) {
+    return decodeURI(
+        (RegExp(name + '=' + '(.+?)(&|$)').exec(location.search)||[,null])[1]
+    );
+}
+
 function scroll(){
 	if ($(window).scrollTop() + $(window).height() > $(document).height() - 50) {
         numResultsLoaded++;
-    	console.log("near bottom!" + numResultsLoaded);
+        var query = getURLParameter("query")
+        var url = 'http://localhost:8000/ding/parsed_query/' + query + "/" + "0" + "/" + numResultsLoaded + '/';
+    	console.log("near bottom!" + numResultsLoaded + url);
     	$.ajax({
-    		url : 'http://localhost:8000/ding/parsed_query/' + numResultsLoaded + '/',
+    		url : url,
     		dataType : 'json',
     		type : 'GET',
     		success: function(data)
 		    {
-		        $.each(data, function(index) {
-		        	var source = $("#search_result").html();
-					var template = Handlebars.compile(source);
-					var html = template(data[index].fields);
-					$("ul.search-results-list").append(html);
-        		});
+                if (data.length == 0) {
+                    numResultsLoaded--;
+                } else {
+                    $.each(data, function(index) {
+		        	     var source = $("#search_result").html();
+					   var template = Handlebars.compile(source);
+					   var html = template(data[index].fields);
+					   $("ul.search-results-list").append(html);
+        		    });
+                }
 		    }
 		});
     }
