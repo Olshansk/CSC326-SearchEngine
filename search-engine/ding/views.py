@@ -1,10 +1,12 @@
 from collections import Counter
 from collections import OrderedDict
 import operator
+import urllib
 from django.core import serializers
 from django.shortcuts import render
 from django.http import HttpResponse
 from ding.models import SearchWord, Document, Word
+from django.db.models.query import EmptyQuerySet
 
 RESULTS_PER_PAGE = 20
 
@@ -26,7 +28,6 @@ def search(request):
 
 # Does setup work and renders the results page
 def parsed_query(request):
-    print "parsed_query"
     # Extracts the input to this method; the search query
     query = request.GET['query']
 
@@ -54,25 +55,39 @@ def parsed_query(request):
     # Prepares the input and passes is it in to the HTML page to be rendered
     context.update({'num_of_words': str(len(split_query))})
     context.update({'should_show_table': should_show_table})
-    # Prepare list of results to be presented
-    # TODO: search using all keywords
-    filteredDocs = document_objects_for_keyword_in_range(0, query)
-    context.update({'documents': filteredDocs})
+    # Prepare list of results to be presented - query is escaped because method expects escaped input
+    filtered_docs = document_objects_for_keyword_in_range(0, urllib.quote_plus(query))
+    context.update({'documents': filtered_docs})
 
     return render(request, 'ding/parsed_query.html', context)
 
+# Used to make agex calls to retrieve more search results
 def get_search_results(request, query, scroll_num):
-    filteredDocs = document_objects_for_keyword_in_range(int(scroll_num), query)
-    jsonData = serializers.serialize('json', filteredDocs, fields=('title','url', 'description'))
+    # Retrieve list of search results
+    filtered_docs = document_objects_for_keyword_in_range(int(scroll_num), query)
+    # Serializes results into json
+    jsonData = serializers.serialize('json', filtered_docs, fields=('title','url', 'description'))
     return HttpResponse(jsonData, mimetype="application/json")
 
 def document_objects_for_keyword_in_range(first_index, keyword):
-    first_key_word = keyword.split(" ")[0]
-    second_key_word = keyword.split(" ")[1]
-    first = Word.objects.get(text=first_key_word).document_set.all()
-    second = Word.objects.get(text=second_key_word).document_set.all()
-    documentObejcts = list((first | second).order_by("pk").distinct()[first_index * RESULTS_PER_PAGE: (first_index + 1) * RESULTS_PER_PAGE])
+    #unescapes and splits the query into keywords
+    keywords = (urllib.unquote_plus(keyword)).split(" ")
+    query_set = EmptyQuerySet()
+    # Retrieves the set of documents corresponding to each keyword
+    for key in keywords:
+        word = get_or_none(Word, text=key)
+        if word is not None:
+            query_set = query_set | word.document_set.all()
+    # Orders the set, removes duplicates, and returns a list of the resultant documents
+    documentObejcts = list(query_set.order_by("pk").distinct()[first_index * RESULTS_PER_PAGE: (first_index + 1) * RESULTS_PER_PAGE])
     return documentObejcts
+
+# Returns a None object if there is not Word obejct corresponding to the keyword
+def get_or_none(model, **kwargs):
+    try:
+        return model.objects.get(**kwargs)
+    except model.DoesNotExist:
+        return None
 
 def error_400(request):
     error = {'error_type': 400, 'request_path': request.path}

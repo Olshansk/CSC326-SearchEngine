@@ -20,7 +20,8 @@ footer {
 
 .search-results-list {
   list-style-type: none;
-  padding-top: 100px; }
+  padding-top: 100px;
+  padding-bottom: 50px; }
 
 .inline {
   display: inline; }
