@@ -268,6 +268,23 @@ class Crawler(object):
 
         return dict(resolved_index)
 
+    @staticmethod
+    def calculate_all_pagerank():
+        #d=0.85
+        #PR(A) = (1-d) + d (PR(T1)/C(T1) + ... + PR(Tn)/C(Tn))
+
+        d = 0.85
+
+        for _ in xrange(0, 30):
+            print "Running iteration of pagerank calculation"
+            for doc in Document.objects.filter(visited=True).prefetch_related('incoming_links'):
+                page_rank = 1 - d
+                for incoming_doc in doc.incoming_links.all().prefetch_related('outgoing_links'):
+                    single_page_rank = incoming_doc.pagerank / incoming_doc.outgoing_links.count()
+                    page_rank += single_page_rank
+                doc.pagerank = page_rank
+                doc.save()
+
     def _batch_query_words(self):
         """Query the database for word rows corresponding to words found in
         the current document, and return it as dictionary mapping word strings
@@ -342,8 +359,8 @@ class Crawler(object):
         doc_links = []
         queried_docs = self._batch_query_documents()
         for url, url_count in self._outgoing_urls.iteritems():
-            doc_links.append(DocumentLink(incoming_link=self._curr_document,
-                                          outgoing_link=queried_docs[url],
+            doc_links.append(DocumentLink(outgoing_link=self._curr_document,
+                                          incoming_link=queried_docs[url],
                                           count=url_count))
         DocumentLink.objects.bulk_create(doc_links)
 
@@ -468,6 +485,7 @@ class Command(BaseCommand):
         else:
             bot = Crawler("urls.txt")
             bot.crawl(1)
+            Crawler.calculate_all_pagerank()
 
     def handle(self, *args, **options):
         if options['profile']:

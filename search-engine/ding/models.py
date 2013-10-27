@@ -23,8 +23,12 @@ class Document(models.Model):
     words = models.ManyToManyField(Word, through='WordOccurrence')
     title = models.TextField()
     description = models.TextField()
-    outgoing_links = models.ManyToManyField('self', through='DocumentLink', symmetrical=False)
+    outgoing_links = models.ManyToManyField('self',
+                                            through='DocumentLink',
+                                            related_name="incoming_links",
+                                            symmetrical=False)
     visited = models.BooleanField(default=False)
+    pagerank = models.FloatField(default=0.15)
 
     def __unicode__(self):
         return self.url

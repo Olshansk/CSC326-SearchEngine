@@ -7,14 +7,14 @@ from ding.models import Word, Document, WordOccurrence, DocumentLink
 class WordOccurrenceInline(admin.TabularInline):
     model = WordOccurrence
     extra = 1
-    raw_id_fields = ("word",)
+    raw_id_fields = ("word", "document")
 
 
 class OutgoingLinksInline(admin.TabularInline):
     model = DocumentLink
     extra = 1
-    fk_name = "incoming_link"
-    raw_id_fields = ("outgoing_link",)
+    fk_name = "outgoing_link"
+    raw_id_fields = ("incoming_link", "outgoing_link")
     verbose_name = "Outgoing link"
     verbose_name_plural = "Outgoing links"
 
@@ -22,8 +22,8 @@ class OutgoingLinksInline(admin.TabularInline):
 class IncomingLinksInline(admin.TabularInline):
     model = DocumentLink
     extra = 1
-    fk_name = "outgoing_link"
-    raw_id_fields = ("incoming_link",)
+    fk_name = "incoming_link"
+    raw_id_fields = ("outgoing_link", "incoming_link")
     verbose_name = "Incoming link"
     verbose_name_plural = "Incoming links"
 
