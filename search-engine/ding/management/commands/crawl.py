@@ -270,19 +270,18 @@ class Crawler(object):
 
     @staticmethod
     def calculate_all_pagerank():
-        #d=0.85
         #PR(A) = (1-d) + d (PR(T1)/C(T1) + ... + PR(Tn)/C(Tn))
 
         d = 0.85
-
-        for _ in xrange(0, 30):
-            print "Running iteration of pagerank calculation"
-            for doc in Document.objects.filter(visited=True).prefetch_related('incoming_links'):
-                page_rank = 1 - d
-                for incoming_doc in doc.incoming_links.all().prefetch_related('outgoing_links'):
-                    single_page_rank = incoming_doc.pagerank / incoming_doc.outgoing_links.count()
-                    page_rank += single_page_rank
-                doc.pagerank = page_rank
+        for i in xrange(0, 10):
+            print "Running iteration " + str(i) + " of pagerank calculation"
+            Word.objects.count()
+            for doc in queryset_iterator(Document.objects.filter(visited=True).prefetch_related('incoming_link').only("pagerank").all()):
+                doc.pagerank = 1 - d
+                for doc_link in queryset_iterator(doc.incoming_link.all()):
+                    outgoing_doc = doc_link.outgoing_link
+                    single_page_rank = outgoing_doc.pagerank / outgoing_doc.outgoing_links.count()
+                    doc.pagerank += doc_link.count * single_page_rank
                 doc.save()
 
     def _batch_query_words(self):
@@ -497,3 +496,13 @@ class Command(BaseCommand):
             print s.getvalue()
         else:
             Command._handle(*args, **options)
+
+
+def queryset_iterator(queryset, chunk_size=1000):
+    """
+    Iterate over a QuerySet, 1000 rows at a time.
+    """
+
+    for x in xrange(0, queryset.count(), chunk_size):
+        for row in queryset.all()[x:x + chunk_size]:
+            yield row
