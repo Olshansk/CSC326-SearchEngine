@@ -4,7 +4,7 @@ import operator
 from django.core import serializers
 from django.shortcuts import render
 from django.http import HttpResponse
-from ding.models import SearchWord, Document
+from ding.models import SearchWord, Document, Word
 
 RESULTS_PER_PAGE = 20
 
@@ -56,7 +56,7 @@ def parsed_query(request):
     context.update({'should_show_table': should_show_table})
     # Prepare list of results to be presented
     # TODO: search using all keywords
-    filteredDocs = document_objects_for_keyword_in_range(0, split_query[0])
+    filteredDocs = document_objects_for_keyword_in_range(0, query)
     context.update({'documents': filteredDocs})
 
     return render(request, 'ding/parsed_query.html', context)
@@ -67,8 +67,11 @@ def get_search_results(request, query, scroll_num):
     return HttpResponse(jsonData, mimetype="application/json")
 
 def document_objects_for_keyword_in_range(first_index, keyword):
-    first_key_word = keyword.split("+")[0]
-    documentObejcts = list(Document.objects.filter(words__text = first_key_word).order_by("id")[first_index * RESULTS_PER_PAGE: (first_index + 1) * RESULTS_PER_PAGE])
+    first_key_word = keyword.split(" ")[0]
+    second_key_word = keyword.split(" ")[1]
+    first = Word.objects.get(text=first_key_word).document_set.all()
+    second = Word.objects.get(text=second_key_word).document_set.all()
+    documentObejcts = list((first | second).order_by("pk").distinct()[first_index * RESULTS_PER_PAGE: (first_index + 1) * RESULTS_PER_PAGE])
     return documentObejcts
 
 def error_400(request):
