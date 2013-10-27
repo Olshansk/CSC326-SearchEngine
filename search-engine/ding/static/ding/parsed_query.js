@@ -53,7 +53,7 @@ function scroll(){
 	if ($(window).scrollTop() + $(window).height() > $(document).height() - 50) {
         numResultsLoaded++;
         var query = getURLParameter("query")
-        var url = 'http://localhost:8000/ding/parsed_query/' + query + "/" + "0" + "/" + numResultsLoaded + '/';
+        var url = 'http://localhost:8000/ding/parsed_query/' + query + "/" + numResultsLoaded + '/';
     	console.log("near bottom!" + numResultsLoaded + url);
     	$.ajax({
     		url : url,

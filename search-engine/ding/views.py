@@ -5,9 +5,8 @@ from django.core import serializers
 from django.shortcuts import render
 from django.http import HttpResponse
 from ding.models import SearchWord, Document
-from ding.forms import QueryForm
 
-RESULTS_PER_PAGE = 5
+RESULTS_PER_PAGE = 20
 
 # Does setup work and renders the search page
 def search(request):
@@ -62,7 +61,7 @@ def parsed_query(request):
 
     return render(request, 'ding/parsed_query.html', context)
 
-def get_search_results(request, query, page_num, scroll_num):
+def get_search_results(request, query, scroll_num):
     print "get_search_results"
     filteredDocs = document_objects_for_keyword_in_range(int(scroll_num), "temp")
     jsonData = serializers.serialize('json', filteredDocs, fields=('title','url', 'description'))
