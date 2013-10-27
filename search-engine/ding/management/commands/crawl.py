@@ -281,7 +281,7 @@ class Crawler(object):
                 for doc_link in queryset_iterator(doc.incoming_link.all()):
                     outgoing_doc = doc_link.outgoing_link
                     single_page_rank = outgoing_doc.pagerank / outgoing_doc.outgoing_links.count()
-                    doc.pagerank += doc_link.count * single_page_rank
+                    doc.pagerank += d * doc_link.count * single_page_rank
                 doc.save()
 
     def _batch_query_words(self):
