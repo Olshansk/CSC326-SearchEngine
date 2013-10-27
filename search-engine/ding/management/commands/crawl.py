@@ -98,7 +98,9 @@ class Crawler(object):
             with open(url_file, 'r') as f:
                 for line in f:
                     self._url_queue.append((self._fix_url(line.strip(), ""), 0))
-        except IOError:
+        except IOError as e:
+            print DIRNAME
+            print "error: " + str(e)
             pass
 
     @staticmethod

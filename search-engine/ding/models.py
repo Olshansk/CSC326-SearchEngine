@@ -19,10 +19,10 @@ class Word(models.Model):
 
 
 class Document(models.Model):
-    url = models.URLField()
+    url = models.URLField(max_length=1000)
     words = models.ManyToManyField(Word, through='WordOccurrence')
-    title = models.TextField()
-    description = models.TextField()
+    title = models.TextField(max_length=1000)
+    description = models.TextField(max_length=1000)
     outgoing_links = models.ManyToManyField('self',
                                             through='DocumentLink',
                                             related_name="incoming_links",

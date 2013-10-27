@@ -6,3 +6,5 @@ virtualenv==1.10.1
 virtualenv-clone==0.2.4
 virtualenvwrapper==4.1.1
 wsgiref==0.1.2
+dj_database_url==0.2.2
+psycopg2==2.5.1
