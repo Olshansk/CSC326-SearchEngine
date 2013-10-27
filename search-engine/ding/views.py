@@ -3,7 +3,7 @@ from collections import OrderedDict
 import operator
 import urllib
 from django.core import serializers
-from django.shortcuts import render
+from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from ding.models import SearchWord, Document, Word
 from django.db.models.query import EmptyQuerySet
@@ -12,7 +12,6 @@ RESULTS_PER_PAGE = 20
 
 # Does setup work and renders the search page
 def search(request):
-    print "here"
     # Retrieve all the keywords in the database
     set_sw = SearchWord.objects.all()
     list_sw = list(set_sw)
@@ -26,11 +25,16 @@ def search(request):
     context = {'frequency_dictionary': words.iteritems()}
     return render(request, 'ding/search.html', context)
 
+# This view is used to redirect the post request from the search form
+def parsed_query_redirect(request):
+    query = request.POST['query']
+    url = "http://localhost:8000/ding/parsed_query?query=" + query
+    return redirect(url)
+
 # Does setup work and renders the results page
 def parsed_query(request):
     # Extracts the input to this method; the search query
     query = request.GET['query']
-
     context = {'query': query}
     should_show_table = False
     # Splits the search query into words
