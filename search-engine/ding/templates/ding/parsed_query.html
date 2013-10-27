@@ -32,7 +32,7 @@
 			</div>
 
 	  		<div class="half inline-block-top-aligned search-field">
-	  			<form class="search-form" method="get" action="{% url 'ding:parsed_query' %}">
+	  			<form class="search-form" method="post" action="{% url 'ding:parsed_query_redirect' %}">
 	    			<div class="input-group">
 	    				{% csrf_token %}
 	      				<input class="form-control" type="text" value = "{{query}}" name="query"/> 
