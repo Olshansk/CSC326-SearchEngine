@@ -13,6 +13,7 @@ from BeautifulSoup import *
 from ding.models import Word, Document, WordOccurrence, DocumentLink
 import sys
 import traceback
+import threading
 
 
 WORD_SEPARATORS = re.compile(r'\s|\n|\r|\t|[^a-zA-Z0-9\-_]')
@@ -92,6 +93,11 @@ class Crawler(object):
         self._words_found = []
         self._outgoing_urls = defaultdict(lambda: 0)
         self._unique_words = []
+
+        self._queue_lock = threading.Lock()
+        self._save_words_lock = threading.Lock()
+        self._save_docs_lock = threading.Lock()
+        self._doc_crawl_lock = defaultdict(lambda: threading.Lock())
 
         # get all urls into the queue
         try:
@@ -325,9 +331,13 @@ class Crawler(object):
     def _save_words(self):
         """Save words and words-to-documents relationship to database"""
 
+        self._save_words_lock.acquire()
+
         self._unique_words = list(set(map(lambda w: w[0], self._words_found)))
         self._save_only_words()
         self._save_word_occurrences()
+
+        self._save_words_lock.release()
 
     def _batch_query_documents(self):
         """Query the database for document rows corresponding to outgoing links
@@ -366,9 +376,13 @@ class Crawler(object):
     def _save_document(self):
         """Save document and document-to-document relationship to database"""
 
+        self._save_docs_lock.acquire()
+
         self._curr_document.save()
         self._save_new_outgoing_docs()
         self._save_outgoing_links()
+
+        self._save_docs_lock.release()
 
     def _save(self):
         """Save all data obtained while crawling current page to database"""
@@ -376,11 +390,18 @@ class Crawler(object):
         self._save_document()
         self._save_words()
 
-    def crawl(self, depth=2, timeout=3):
-        """Crawl the web!"""
+    def crawl_thread(self, depth, timeout):
+        while True:
 
-        while len(self._url_queue):
+            print "ak"
+            self._queue_lock.acquire()
+            if len(self._url_queue) == 0:
+                print "rel"
+                self._queue_lock.release()
+                break
             url, depth_ = self._url_queue.pop()
+            print "rel: url = " + str(url)
+            self._queue_lock.release()
 
             # skip this url; it's too deep
             if depth_ > depth:
@@ -388,10 +409,13 @@ class Crawler(object):
 
             self._curr_document = None
 
+            self._doc_crawl_lock[url].acquire()
+
             doc_from_db = Document.objects.filter(url=url)
             if doc_from_db.exists():
                 self._curr_document = doc_from_db[0]
                 if self._curr_document.visited:
+                    self._doc_crawl_lock[url].release()
                     continue
 
             socket = None
@@ -429,14 +453,49 @@ class Crawler(object):
 
             except Exception as e:
                 print "Exception in user code: " + str(e)
-                print '-'*60
+                print '-' * 60
                 traceback.print_exc(file=sys.stdout)
-                print '-'*60
+                print '-' * 60
             finally:
                 if socket:
                     socket.close()
                 if file_stream:
                     file_stream.close()
+
+                self._doc_crawl_lock[url].release()
+                try:
+                    self._save_words_lock.release()
+                except threading.ThreadError:
+                    pass
+                try:
+                    self._save_docs_lock.release()
+                except threading.ThreadError:
+                    pass
+
+    def crawl(self, depth=2, timeout=3, multithread=False):
+        """Crawl the web!"""
+
+        if multithread:
+            threads = []
+
+            thread1 = CrawlThread(self, depth, timeout)
+            thread2 = CrawlThread(self, depth, timeout)
+
+            # Start new Threads
+            thread1.start()
+            thread2.start()
+
+            # Add threads to thread list
+            threads.append(thread1)
+            threads.append(thread2)
+
+            # Wait for all threads to complete
+            for t in threads:
+                t.join()
+
+            print "Exiting Main Thread"
+        else:
+            self.crawl_thread(depth, timeout)
 
 
 class Command(BaseCommand):
@@ -452,6 +511,11 @@ class Command(BaseCommand):
                     dest='profile',
                     default=False,
                     help='Profile the crawler'),
+        make_option('--multithread',
+                    action='store_true',
+                    dest='multithread',
+                    default=False,
+                    help='Multithread the crawler'),
     )
 
     @staticmethod
@@ -473,14 +537,14 @@ class Command(BaseCommand):
             Crawler.clean_db()
 
             bot = Crawler("pages_crawl_test.txt")
-            bot.crawl(10000)  # crawl to a big depth
+            bot.crawl(10000, multithread=options["multithread"])  # crawl to a big depth
             assert (Document.objects.count() == 5)  # total of 5 pages in this crawl
             inverted_index = bot.get_resolved_inverted_index()
             assert (len(inverted_index['crawl']) == 5)  # 'crawl' occurs in all 5 pages
             assert (len(inverted_index['fifth']) == 1)  # 'fifth' occur in all 1 page
             assert ('second_page.html' in inverted_index['fifth'])  # 'fifth' occurs in 'second_page.html'
 
-            Crawler.clean_db()
+            #Crawler.clean_db()
         else:
             bot = Crawler("urls.txt")
             bot.crawl(1)
@@ -499,10 +563,19 @@ class Command(BaseCommand):
 
 
 def queryset_iterator(queryset, chunk_size=1000):
-    """
-    Iterate over a QuerySet, 1000 rows at a time.
-    """
+    """Iterate over a QuerySet, 1000 rows at a time."""
 
     for x in xrange(0, queryset.count(), chunk_size):
         for row in queryset.all()[x:x + chunk_size]:
             yield row
+
+
+class CrawlThread(threading.Thread):
+    def __init__(self, crawler, depth, timeout):
+        threading.Thread.__init__(self)
+        self._crawler = crawler
+        self.depth = depth
+        self.timeout = timeout
+
+    def run(self):
+        self._crawler.crawl_thread(self.depth, self.timeout)
