@@ -480,6 +480,15 @@ class Command(BaseCommand):
             assert (len(inverted_index['fifth']) == 1)  # 'fifth' occur in all 1 page
             assert ('second_page.html' in inverted_index['fifth'])  # 'fifth' occurs in 'second_page.html'
 
+            Crawler.calculate_all_pagerank()
+
+            #Round to eliminate float errors when the number is off by something like 0.000000000000001
+            assert(("%.8f" % Document.objects.get(url="first_page.html").pagerank) == "0.15000000")
+            assert(("%.8f" % Document.objects.get(url="second_page.html").pagerank) == "0.21375000")
+            assert(("%.8f" % Document.objects.get(url="third_page.html").pagerank) == "0.21375000")
+            assert(("%.8f" % Document.objects.get(url="fourth_page.html").pagerank) == "0.24084375")
+            assert(("%.8f" % Document.objects.get(url="fifth_page.html").pagerank) == "0.24084375")
+
             Crawler.clean_db()
         else:
             bot = Crawler("urls.txt")
