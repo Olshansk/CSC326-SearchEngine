@@ -4,7 +4,13 @@ var noMoreResults = false;
 $(document).ready(function (){    
     validate();
     $('input.form-control').change(validate);
-    $( window ).scroll(scroll);
+    $(window).scroll(scroll);
+    console.log($(".search-results-list").height());
+    if ($(".search-results-list").height() < $(window).height()) {
+        $("footer").css("visibility","visible");    
+    } else {
+        $("footer").css("visibility","hidden");
+    }
 });
 
 $(document).ajaxSend(function(event, xhr, settings) {
@@ -52,32 +58,36 @@ function getURLParameter(name) {
 
 function scroll(){
 	if ($(window).scrollTop() + $(window).height() > $(document).height() - 50) {
-        numResultsLoaded++;
-        var query = getURLParameter("query")
-        var url = 'http://localhost:8000/ding/parsed_query/' + query + "/" + numResultsLoaded + '/';
-    	console.log("near bottom!" + numResultsLoaded + url);
         if (noMoreResults) {
             return;
         }
-    	$.ajax({
-    		url : url,
-    		dataType : 'json',
-    		type : 'GET',
-    		success: function(data)
-		    {
+        loadMoreResults();
+    }
+}
+
+function loadMoreResults() {
+    numResultsLoaded++;
+    var query = getURLParameter("query")
+    var url = 'http://localhost:8000/ding/parsed_query/' + query + "/" + numResultsLoaded + '/';
+    $.ajax({
+            url : url,
+            dataType : 'json',
+            type : 'GET',
+            success: function(data)
+            {
                 if (data.length == 0) {
                     noMoreResults = true;
+                    $("footer").css("visibility","visible");
                 } else {
                     $.each(data, function(index) {
-		        	     var source = $("#search_result").html();
-					   var template = Handlebars.compile(source);
-					   var html = template(data[index].fields);
-					   $("ul.search-results-list").append(html);
-        		    });
+                         var source = $("#search_result").html();
+                       var template = Handlebars.compile(source);
+                       var html = template(data[index].fields);
+                       $("ul.search-results-list").append(html);
+                    });
                 }
-		    }
-		});
-    }
+            }
+        });
 }
 
 function validate(){

@@ -75,7 +75,7 @@ def get_search_results(request, query, scroll_num):
 
 def document_objects_for_keyword_in_range(first_index, keyword):
     #unescapes and splits the query into keywords
-    keywords = (urllib.unquote_plus(keyword)).split(" ")
+    keywords = list(set((urllib.unquote_plus(keyword)).split(" ")))
     query_set = EmptyQuerySet()
     # Retrieves the set of documents corresponding to each keyword
     for key in keywords:
