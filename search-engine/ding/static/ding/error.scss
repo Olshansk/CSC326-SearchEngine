@@ -16,16 +16,23 @@ $logo-color: #BE0011;
 .logo-image {
 	vertical-align: middle;
 	width:80px;
-	height:80x;
+	height:80px;
 }
 
 .error-block {
 	margin-left:50px;	
 	margin-top:60px;
 	display:inline-block;
+
+	*display: inline;
+    zoom: 1;
 }
 
 .ringing-bell-block {
 	display:inline-block;
 	float:left;
+
+	*display: inline;
+    zoom: 1;
+
 }

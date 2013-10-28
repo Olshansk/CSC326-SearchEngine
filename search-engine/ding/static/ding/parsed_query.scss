@@ -34,15 +34,26 @@ footer {
 
 .inline {
 	display:inline;
+
+    *display: inline;
+    zoom: 1;
 }
 
 .inline-block {
     display:inline-block;
+
+    *display: inline;
+    zoom: 1;
+
 }
 
 .inline-block-top-aligned {
 	display:inline-block;
 	vertical-align:top;
+
+    *display: inline;
+    zoom: 1;
+
 }
 
 .search-field {
@@ -59,6 +70,7 @@ footer {
 }
 
 .top-bar {
+  width:100%;
   position: fixed;
   box-shadow: 0px 2px 20px #888888;
   top: 0; 
@@ -109,6 +121,10 @@ footer {
     height:30px;
     display:inline-block;
     margin-right:20px;
+
+     *display: inline;
+    zoom: 1;
+
 }
 
 .centered-text {
