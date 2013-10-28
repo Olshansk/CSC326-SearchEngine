@@ -268,14 +268,14 @@ class Crawler(object):
         return dict(resolved_index)
 
     @staticmethod
-    def calculate_all_pagerank():
+    def calculate_all_pagerank(iterations=10):
         """
         Calculate the pagerank of every document in the database, using this algorithm:
         PR(A) = (1-d) + d (PR(T1)/C(T1) + ... + PR(Tn)/C(Tn))
         """
 
         d = 0.85
-        for i in xrange(0, 10):
+        for i in xrange(0, iterations):
             print "Running iteration " + str(i) + " of pagerank calculation"
             Word.objects.count()
 
