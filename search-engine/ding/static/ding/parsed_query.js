@@ -6,15 +6,12 @@ $(document).ready(function (){
     validate();
     $('input.form-control').change(validate);
     $(window).scroll(scroll);
-    console.log($(".search-results-list").height());
-    if ($(".search-results-list").height() < $(window).height()) {
-        $(".footer").css("display","block");
-        $(".load-footer").css("display","none");    
-    } else {
-        $(".footer").css("display","none");
-        $(".load-footer").css("visibility","visible");
-        $(".spinner").css("visibility","hidden");
-        $(".load-more-text").text("Scroll down to load more results.");
+    $(".footer").css("display","none");
+    $(".load-footer").css("visibility","visible");
+    $(".spinner").css("visibility","hidden");
+    $(".load-more-text").text("Scroll down to load more results.");
+    if ($(".search-results-list").height() <= $(window).height()) {
+        loadMoreResults();
     }
 });
 
@@ -62,7 +59,7 @@ function getURLParameter(name) {
 }
 
 function scroll(){
-	if ($(window).scrollTop() + $(window).height() > $(document).height() - 2) {
+	if ($(window).scrollTop() + $(window).height() > $(document).height() - 10) {
         if (noMoreResults) {
             return;
         }
@@ -71,7 +68,7 @@ function scroll(){
 }
 
 function loadMoreResults() {
-    if (loading) {
+    if (loading || noMoreResults) {
         return;
     }
     numResultsLoaded++;
@@ -101,6 +98,9 @@ function loadMoreResults() {
                     });
                 }
                 loading = false;
+                if ($(".search-results-list").height() <= $(window).height()) {
+                    loadMoreResults();
+                }
             }
         });
 }
