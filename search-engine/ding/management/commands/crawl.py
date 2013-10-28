@@ -110,7 +110,6 @@ class Crawler(object):
         if rel_l.startswith("http://") or rel_l.startswith("https://"):
             curr_url, rel = rel, ""
 
-        # compute the new url based on import
         curr_url = urlparse.urldefrag(curr_url)[0]
         parsed_url = urlparse.urlparse(curr_url)
         return urlparse.urljoin(parsed_url.geturl(), rel)
@@ -270,14 +269,21 @@ class Crawler(object):
 
     @staticmethod
     def calculate_all_pagerank():
-        #PR(A) = (1-d) + d (PR(T1)/C(T1) + ... + PR(Tn)/C(Tn))
+        """
+        Calculate the pagerank of every document in the database, using this algorithm:
+        PR(A) = (1-d) + d (PR(T1)/C(T1) + ... + PR(Tn)/C(Tn))
+        """
 
         d = 0.85
         for i in xrange(0, 10):
             print "Running iteration " + str(i) + " of pagerank calculation"
             Word.objects.count()
+
+            # Loop over all documents, prefetching any incoming links
             for doc in queryset_iterator(Document.objects.filter(visited=True).prefetch_related('incoming_link').only("pagerank").all()):
                 doc.pagerank = 1 - d
+
+                # Loop over each incoming link and add the partial pagrank
                 for doc_link in queryset_iterator(doc.incoming_link.all()):
                     outgoing_doc = doc_link.outgoing_link
                     single_page_rank = outgoing_doc.pagerank / outgoing_doc.outgoing_links.count()
@@ -344,7 +350,7 @@ class Crawler(object):
         return doc_dict
 
     def _save_new_outgoing_docs(self):
-        """Save outgoing links to the database"""
+        """Save newly discovered documents to the database"""
 
         docs_to_bulk_create = []
         queried_docs = self._batch_query_documents()
@@ -355,6 +361,8 @@ class Crawler(object):
         Document.objects.bulk_create(docs_to_bulk_create)
 
     def _save_outgoing_links(self):
+        """Save outgoing links to the database"""
+
         doc_links = []
         queried_docs = self._batch_query_documents()
         for url, url_count in self._outgoing_urls.iteritems():
@@ -501,6 +509,8 @@ class Command(BaseCommand):
             s = StringIO.StringIO()
 
             profiler.runcall(self._handle, *args, **options)
+
+            # Sort profiled functions by cumulative time spent in function
             pstats.Stats(profiler, stream=s).sort_stats('cumulative').print_stats()
             print s.getvalue()
         else:
@@ -508,9 +518,7 @@ class Command(BaseCommand):
 
 
 def queryset_iterator(queryset, chunk_size=1000):
-    """
-    Iterate over a QuerySet, 1000 rows at a time.
-    """
+    """Iterate over a QuerySet, 1000 rows at a time"""
 
     for x in xrange(0, queryset.count(), chunk_size):
         for row in queryset.all()[x:x + chunk_size]:
