@@ -79,7 +79,6 @@ function loadMoreResults() {
     var url = 'http://localhost:8000/ding/parsed_query/' + query + "/" + numResultsLoaded + '/';
     $(".spinner").css("visibility","visible");
     $(".load-more-text").text("Loading...");
-    alert("hello");
     loading = true;
     $.ajax({
             url : url,
