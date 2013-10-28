@@ -83,7 +83,7 @@ def document_objects_for_keyword_in_range(first_index, keyword):
         if word is not None:
             query_set = query_set | word.document_set.all()
     # Orders the set, removes duplicates, and returns a list of the resultant documents
-    documentObejcts = list(query_set.order_by("pk").distinct()[first_index * RESULTS_PER_PAGE: (first_index + 1) * RESULTS_PER_PAGE])
+    documentObejcts = list(query_set.order_by("-pagerank").distinct()[first_index * RESULTS_PER_PAGE: (first_index + 1) * RESULTS_PER_PAGE])
     return documentObejcts
 
 # Returns a None object if there is not Word obejct corresponding to the keyword
