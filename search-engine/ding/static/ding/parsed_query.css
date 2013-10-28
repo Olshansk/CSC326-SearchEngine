@@ -13,6 +13,10 @@ footer {
   height: 50px;
   width: 100%; }
 
+.load-footer {
+  height: 100px;
+  width: 100%; }
+
 .footer {
   height: 50px;
   width: 100%;
@@ -25,6 +29,9 @@ footer {
 
 .inline {
   display: inline; }
+
+.inline-block {
+  display: inline-block; }
 
 .inline-block-top-aligned {
   display: inline-block;
@@ -76,12 +83,24 @@ footer {
 .load-more-text {
   text-align: center;
   vertical-align: middle;
-  line-height: 50px; }
+  line-height: 100px; }
 
-.copyright-text {
+.spinner {
+  width: 30px;
+  height: 30px;
+  display: inline-block;
+  margin-right: 20px; }
+
+.centered-text {
   text-align: center;
   vertical-align: middle;
   line-height: 50px; }
+
+.centered-text-load {
+  text-align: center;
+  vertical-align: middle;
+  line-height: 100px;
+  font-size: large; }
 
 table, th {
   outline-style: solid;

@@ -1,5 +1,6 @@
 var numResultsLoaded = 0;
 var noMoreResults = false;
+var loading = false;
 
 $(document).ready(function (){    
     validate();
@@ -7,9 +8,13 @@ $(document).ready(function (){
     $(window).scroll(scroll);
     console.log($(".search-results-list").height());
     if ($(".search-results-list").height() < $(window).height()) {
-        $("footer").css("visibility","visible");    
+        $(".footer").css("display","block");
+        $(".load-footer").css("display","none");    
     } else {
-        $("footer").css("visibility","hidden");
+        $(".footer").css("display","none");
+        $(".load-footer").css("visibility","visible");
+        $(".spinner").css("visibility","hidden");
+        $(".load-more-text").text("Scroll down to load more results.");
     }
 });
 
@@ -57,7 +62,7 @@ function getURLParameter(name) {
 }
 
 function scroll(){
-	if ($(window).scrollTop() + $(window).height() > $(document).height() - 50) {
+	if ($(window).scrollTop() + $(window).height() > $(document).height() - 2) {
         if (noMoreResults) {
             return;
         }
@@ -66,18 +71,28 @@ function scroll(){
 }
 
 function loadMoreResults() {
+    if (loading) {
+        return;
+    }
     numResultsLoaded++;
     var query = getURLParameter("query")
     var url = 'http://localhost:8000/ding/parsed_query/' + query + "/" + numResultsLoaded + '/';
+    $(".spinner").css("visibility","visible");
+    $(".load-more-text").text("Loading...");
+    alert("hello");
+    loading = true;
     $.ajax({
             url : url,
             dataType : 'json',
             type : 'GET',
             success: function(data)
             {
+                $(".spinner").css("visibility","hidden");
+                $(".load-more-text").text("Scroll down to load more results.");
                 if (data.length == 0) {
                     noMoreResults = true;
-                    $("footer").css("visibility","visible");
+                    $(".footer").css("display","block");
+                    $(".load-footer").css("display","none");
                 } else {
                     $.each(data, function(index) {
                          var source = $("#search_result").html();
@@ -86,6 +101,7 @@ function loadMoreResults() {
                        $("ul.search-results-list").append(html);
                     });
                 }
+                loading = false;
             }
         });
 }
