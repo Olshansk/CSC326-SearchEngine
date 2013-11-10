@@ -132,7 +132,6 @@ INSTALLED_APPS = (
 )
 
 SESSION_SERIALIZER = 'django.contrib.sessions.serializers.JSONSerializer'
-SESSION_ENGINE='ding.my_sessions'
 
 # A sample logging configuration. The only tangible logging
 # performed by this configuration is to send an email to
