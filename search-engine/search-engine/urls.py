@@ -7,7 +7,7 @@ from ding import views
 admin.autodiscover()
 
 urlpatterns = patterns('',
-                       url(r'^ding/', include('ding.urls', namespace='ding')),
+                       url(r'^ding/', include('ding.urls', namespace='ding', app_name='ding')),
                        # Examples:
                        # url(r'^$', 'search-engine.views.home', name='home'),
                        # url(r'^search-engine/', include('search-engine.foo.urls')),

@@ -11,11 +11,9 @@
 	</div>
 	<div class="error-block">
 		<h1 class="logo-text">
-			<a class="home-link" href="http://localhost:8000/ding/">
+			<a class="home-link" href= {% url 'ding:sign_in'%}>
 				ding
-				<!--<img class ="logo-image" src="{{STATIC_PREFIX}}ding/images/logo.png"/>-->
 			</a>
-			
 		</h1>
 		</p>
 			<b>{{error_type}}.</b>

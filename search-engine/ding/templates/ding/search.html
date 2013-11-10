@@ -7,11 +7,13 @@
 <link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/bootstrap.min.css"></link>
 <link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/search.css"></link>
 
+{% include "ding/user_profile.html" with name=user_name %}
+
 <div class="logo">
-	<h1 class = "logo-text">
+	<p class = "logo-text">
 		<img class = "logo-image" src="{{STATIC_PREFIX}}ding/images/logo.png"/>
 		ding
-	</h1>
+	</p>
 </div>
 
 <div class="search-block">

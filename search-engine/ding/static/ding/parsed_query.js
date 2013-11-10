@@ -4,6 +4,7 @@ var loading = false;
 
 $(document).ready(function (){    
     validate();
+    $("#profile-button").css('top', 0);
     $('input.form-control').change(validate);
     $(window).scroll(scroll);
     $(".footer").css("display","none");
@@ -73,7 +74,7 @@ function loadMoreResults() {
     }
     numResultsLoaded++;
     var query = getURLParameter("query")
-    var url = 'http://localhost:8000/ding/parsed_query/' + query + "/" + numResultsLoaded + '/';
+    var url = '/parsed_query/' + query + "/" + numResultsLoaded + '/';
     $(".spinner").css("visibility","visible");
     $(".load-more-text").text("Loading...");
     loading = true;
