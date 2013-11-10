@@ -10,7 +10,6 @@ from django.db.models.query import EmptyQuerySet
 
 from django.core.urlresolvers import reverse
 
-from ding.my_sessions import SessionStore
 from ding.models import SearchWord, Word
 
 import json
