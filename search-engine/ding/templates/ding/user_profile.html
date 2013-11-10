@@ -1,0 +1,17 @@
+{% load static %}
+{% load staticfiles %}
+{% get_static_prefix as STATIC_PREFIX %}
+
+<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/jquery-2.0.3.min.js"></script>
+<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/bootstrap.js"></script>
+<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/user_profile.css"></link>
+
+<div id="profile-button" class="dropdown top-right-fixed">
+	<input type="image" data-toggle="dropdown" id="profile-button" src={{ user_image_url }} />
+	<ul class="dropdown-menu pull-right" role="menu" aria-labelledby="dLabel">
+		<li class="text-horizontal-centre">{{user_name}}</li>
+		<li class="bottom-list-item text-horizontal-centre">
+			<a href= {% url 'ding:disconnect' %} "disconnect/" class="button">Sign Out</a> 
+		</li>
+	</ul>	
+</div>

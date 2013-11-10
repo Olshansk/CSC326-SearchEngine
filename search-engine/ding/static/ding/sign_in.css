@@ -1,0 +1,15 @@
+.horizontal-centre {
+  text-align: center; }
+
+.logo {
+  color: #BE0011;
+  margin-top: 10%; }
+
+.logo-text {
+  font-family: Georgia;
+  font-size: 60px; }
+
+.logo-image {
+  vertical-align: middle;
+  width: 200px;
+  height: 200px; }
