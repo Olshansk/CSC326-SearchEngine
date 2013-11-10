@@ -74,7 +74,7 @@ function loadMoreResults() {
     }
     numResultsLoaded++;
     var query = getURLParameter("query")
-    var url = '/parsed_query/' + query + "/" + numResultsLoaded + '/';
+    var url = '/ding/parsed_query/' + query + "/" + numResultsLoaded + '/';
     $(".spinner").css("visibility","visible");
     $(".load-more-text").text("Loading...");
     loading = true;

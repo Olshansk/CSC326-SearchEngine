@@ -59,7 +59,6 @@ def connect(request):
 
     # Retrieve the authorization code
     code = request.POST['authCode'.decode("utf-8")]
-
     # Upgrade the authorization code into a credentials object
     try:
         oauth_flow = flow_from_clientsecrets(os.path.join(BASE, "client_secrets.json"), scope='')
@@ -67,7 +66,6 @@ def connect(request):
         credentials = oauth_flow.step2_exchange(code)
     except FlowExchangeError:
         return redirect(reverse("ding:error_401"))
-
     # Access the currently connected user
     gplus_id = credentials.id_token['sub']
 
