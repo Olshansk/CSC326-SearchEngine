@@ -141,6 +141,12 @@ def search(request):
     # Retrieve the user name and profile image url and add it to context
     credentials = oauth2client.client.Credentials.new_from_json(request.session['credentials'])
     user_data = user_data_from_credentials(credentials)
+    # Redirect if expired
+    if user_data is None:
+        del request.session['credentials']
+        request.session.delete()
+        return redirect(reverse("ding:sign_in"))
+
     context.update(user_data)
 
     return render(request, 'ding/search.html', context)
@@ -197,6 +203,11 @@ def parsed_query(request):
     # Retrieve the user name and profile image url and add it to context
     credentials = oauth2client.client.Credentials.new_from_json(request.session['credentials'])
     user_data = user_data_from_credentials(credentials)
+    # Redirect if expired
+    if user_data is None:
+        del request.session['credentials']
+        request.session.delete()
+        return redirect(reverse("ding:sign_in"))
     context.update(user_data)
 
     return render(request, 'ding/parsed_query.html', context)
@@ -235,7 +246,13 @@ def user_data_from_credentials(credentials):
     http = credentials.authorize(http)
     # Get user name and image url
     users_service = build('plus', 'v1', http=http)
-    profile = users_service.people().get(userId='me').execute()
+    
+    # Test to make sure that access hasn't been revoked yet
+    try:
+        profile = users_service.people().get(userId='me').execute()
+    except AccessTokenRefreshError:
+        return None
+
     user_name = profile['displayName']
     user_image= profile['image']['url']
 
