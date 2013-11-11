@@ -2,6 +2,9 @@
 {% load staticfiles %}
 {% get_static_prefix as STATIC_PREFIX %}
 
+{% csrf_token %}
+<input style="visibility:hidden" id="csrf_token" value="{{ csrf_token }}" readonly/>
+
 <script type="text/javascript">
   (function() {
     var po = document.createElement('script');

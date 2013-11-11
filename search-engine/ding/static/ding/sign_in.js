@@ -1,3 +1,4 @@
+/*
 $(document).ajaxSend(function(event, xhr, settings) {
     function getCookie(name) {
         var cookieValue = null;
@@ -24,7 +25,7 @@ $(document).ajaxSend(function(event, xhr, settings) {
         return (url == origin || url.slice(0, origin.length + 1) == origin + '/') ||
             (url == sr_origin || url.slice(0, sr_origin.length + 1) == sr_origin + '/') ||
             // or any other URL that isn't scheme relative or absolute i.e relative.
-            !(/^(\/\/|http:|https:).*/.test(url));
+            !(/^(\/\/|http:|https:).*//*.test(url));
     }
     function safeMethod(method) {
         return (/^(GET|HEAD|OPTIONS|TRACE)$/.test(method));
@@ -33,6 +34,10 @@ $(document).ajaxSend(function(event, xhr, settings) {
     if (!safeMethod(settings.type) && sameOrigin(settings.url)) {
         xhr.setRequestHeader("X-CSRFToken", getCookie('csrftoken'));
     }
+});
+*/
+$.ajaxSetup({
+  data: {csrfmiddlewaretoken: '{{ csrf_token }}' },
 });
 
 var helper = (function() {
@@ -65,7 +70,9 @@ var helper = (function() {
 
       var stateVar = $('#stateVar').val();
       var url = window.location.href + 'connect/'; 
-      content = {'state' : stateVar, 'authCode':this.authResult.code};
+      
+      var CSRF_TOKEN = document.getElementById('csrf_token').value;
+      content = {'state' : stateVar, 'authCode':this.authResult.code, 'csrfmiddlewaretoken': CSRF_TOKEN};
 
       $.ajax({
         type: 'POST',
