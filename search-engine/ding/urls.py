@@ -7,7 +7,7 @@ from django.core.urlresolvers import reverse_lazy
 from django.views.generic import RedirectView
 
 urlpatterns = patterns('',
-                       url(r'^$', views.sign_in, name='sign_in'),
+                       url(r'^$', RedirectView.as_view(url=reverse_lazy('ding:search')), name='sign_in'),
                        url(r'^connect/$', views.connect, name='connect'),
                        url(r'^disconnect/$', views.disconnect, name='disconnect'),
                        url(r'^disconnect/sign_in/$', RedirectView.as_view(url=reverse_lazy('ding:sign_in')), name="disconnect_sign_in"),

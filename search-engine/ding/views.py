@@ -139,15 +139,15 @@ def search(request):
     context = {'frequency_dictionary': words.iteritems()}
 
     # Retrieve the user name and profile image url and add it to context
-    credentials = oauth2client.client.Credentials.new_from_json(request.session['credentials'])
-    user_data = user_data_from_credentials(credentials)
-    # Redirect if expired
-    if user_data is None:
-        del request.session['credentials']
-        request.session.delete()
-        return redirect(reverse("ding:sign_in"))
+    # credentials = oauth2client.client.Credentials.new_from_json(request.session['credentials'])
+    # user_data = user_data_from_credentials(credentials)
+    # # Redirect if expired
+    # if user_data is None:
+    #     del request.session['credentials']
+    #     request.session.delete()
+    #     return redirect(reverse("ding:sign_in"))
 
-    context.update(user_data)
+    # context.update(user_data)
 
     return render(request, 'ding/search.html', context)
 
@@ -201,14 +201,14 @@ def parsed_query(request):
     context.update({'documents': filtered_docs})
 
     # Retrieve the user name and profile image url and add it to context
-    credentials = oauth2client.client.Credentials.new_from_json(request.session['credentials'])
-    user_data = user_data_from_credentials(credentials)
-    # Redirect if expired
-    if user_data is None:
-        del request.session['credentials']
-        request.session.delete()
-        return redirect(reverse("ding:sign_in"))
-    context.update(user_data)
+    # credentials = oauth2client.client.Credentials.new_from_json(request.session['credentials'])
+    # user_data = user_data_from_credentials(credentials)
+    # # Redirect if expired
+    # if user_data is None:
+    #     del request.session['credentials']
+    #     request.session.delete()
+    #     return redirect(reverse("ding:sign_in"))
+    # context.update(user_data)
 
     return render(request, 'ding/parsed_query.html', context)
 
@@ -267,8 +267,8 @@ def get_or_none(model, **kwargs):
 
 # Prevents the user from accessing search pages if the user is not logged in
 def redirect_if_not_logged_in(request):
-    if request.session.get('credentials') is None:
-        return redirect(reverse("ding:sign_in"))
+    #if request.session.get('credentials') is None:
+    #    return redirect(reverse("ding:sign_in"))
     return None
 
 def error_400(request):

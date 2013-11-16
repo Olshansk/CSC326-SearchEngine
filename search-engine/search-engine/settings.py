@@ -3,7 +3,7 @@ import os
 
 DIRNAME = os.path.abspath(os.path.dirname(__file__))
 
-DEBUG = os.environ.get('DING_DEBUG') == 'True'
+DEBUG = True #os.environ.get('DING_DEBUG') == 'True'
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
