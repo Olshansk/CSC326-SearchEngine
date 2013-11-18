@@ -19,7 +19,7 @@ class Word(models.Model):
 
 
 class Document(models.Model):
-    url = models.URLField()
+    url = models.URLField(max_length=500)
     words = models.ManyToManyField(Word, through='WordOccurrence')
     title = models.TextField()
     description = models.TextField()
