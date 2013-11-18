@@ -1,9 +1,12 @@
 {% load static %}
 {% load staticfiles %}
 {% get_static_prefix as STATIC_PREFIX %}
+{% load compress %}
 
-<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/bootstrap.min.css"></link>
-<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/error.css"></link>
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css" rel="stylesheet">
+{% compress css %}
+	<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/error.css"></link>
+{% endcompress %}
 
 <div>
 	<div class="ringing-bell-block">

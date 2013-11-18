@@ -1,11 +1,16 @@
 {% load static %}
 {% load staticfiles %}
 {% get_static_prefix as STATIC_PREFIX %}
+{% load compress %}
 
-{% csrf_token %}
-<input style="visibility:hidden" id="csrf_token" value="{{ csrf_token }}" readonly/>
-
-<script type="text/javascript">
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css" rel="stylesheet">
+{% compress css %}
+	<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/sign_in.css"></link>
+{% endcompress %}
+{% compress js%}
+	<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/sign_in.js" async="true"></script>
+{% endcompress %}
+<script type="text/javascript" async="true">
   (function() {
     var po = document.createElement('script');
     po.type = 'text/javascript'; po.async = true;
@@ -15,13 +20,12 @@
   })();
 </script>
 
-<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/sign_in.css"></link>
-<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/jquery-2.0.3.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/sign_in.js"></script>
+{% csrf_token %}
+<input style="visibility:hidden" id="csrf_token" value="{{ csrf_token }}" readonly/>
 
 <div class="logo horizontal-centre">
 	<h1 class = "logo-text">
-		<img class = "logo-image" src="{{STATIC_PREFIX}}ding/images/logo.png"/>
+		<img class = "logo-image" src="{{STATIC_PREFIX}}ding/images/logo_200_200.png" width="200" height="200" />
 		ding
 	</h1>
 </div>

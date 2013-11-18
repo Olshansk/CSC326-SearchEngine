@@ -3,30 +3,38 @@
 {% load static %}
 {% load staticfiles %}
 {% get_static_prefix as STATIC_PREFIX %}
+{% load compress %}
 
-<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/bootstrap.min.css"></link>
-<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/parsed_query.css"></link>
-<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/search_result.css"></link>
-<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/jquery-2.0.3.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/handlebars.js"></script>
-<script id="search_result" type="text/x-handlebars-template">
- 	<div>
- 		{% verbatim %}
-		<h1 class="title">
-			<a href={{temp}}> {{title}}</a>
-		</h1>
-		<cite class="source"> {{url}} </cite>
-		<p>{{description}} </p>
-		{% endverbatim %}
-	</div>
-</script>
-<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/parsed_query.js"></script>
+<head>
+	<link rel="stylesheet" href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css"></link>
+	{% compress css %}
+		<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/parsed_query.css"></link>
+		<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/search_result.css"></link>
+	{% endcompress %}
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js" async="true"></script>
+
+	<script src="//cdnjs.cloudflare.com/ajax/libs/handlebars.js/1.1.2/handlebars.min.js" async="true"></script>
+	<script id="search_result" type="text/x-handlebars-template" async="true">
+	 	<div>
+	 		{% verbatim %}
+			<h1 class="title">
+				<a href={{temp}}> {{title}}</a>
+			</h1>
+			<cite class="source"> {{url}} </cite>
+			<p>{{description}} </p>
+			{% endverbatim %}
+		</div>
+	</script>
+	{% compress js %}
+		<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/parsed_query.js" async="true"></script>
+	{% endcompress %}
+</head>
 <body>
 	<div class="top-bar gray-background">
 		<div class="search-block">
 			{% include "ding/user_profile.html" with name=user_name%}
 			<div class="logo inline-block-top-aligned">
-				<img class ="logo-image" src="{{STATIC_PREFIX}}ding/images/logo.png"/>
+				<img class ="logo-image" src="{{STATIC_PREFIX}}ding/images/logo_50_50.png" width="50" height="50" />
 				<span class="logo-text">
 					ding
 				</span>
@@ -36,10 +44,10 @@
 	  			<form class="search-form" method="post" action="{% url 'ding:parsed_query_redirect' %}">
 	    			<div class="input-group">
 	    				{% csrf_token %}
-	      				<input class="form-control" type="text" value = "{{query}}" name="query"/> 
+	      				<input class="form-control" type="text" value = "{{query}}" name="query"/>
 	      				<span class="input-group-btn">
 	      					<button class="btn btn-default" type="button submit" value="Search">
-								<img class ="search-image" src="{{STATIC_PREFIX}}ding/images/search-icon.png"/>
+								<img class ="search-image" src="{{STATIC_PREFIX}}ding/images/search-icon.png" width="20" height="20" />
 							</button>
 	        			</span>
 	    			</div>
@@ -76,14 +84,14 @@
 			</tr>
 			{% endfor %}
 			</table>
-		
+
 		{% endif %}
 	</div>
 
 	-->
 	<footer>
 		<div class="load-footer centered-text-load gray-background">
-			<img class ="spinner" src="{{STATIC_PREFIX}}ding/images/spinner.gif"/>
+			<img class ="spinner" src="{{STATIC_PREFIX}}ding/images/spinner.gif" width="32" height="32" />
 			<p class="inline-block load-more-text">Scroll down to load more results.</p>
 		</div>
 		<div class="footer gray-background">
