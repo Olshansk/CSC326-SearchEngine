@@ -1,17 +1,23 @@
 {% load static %}
 {% load staticfiles %}
 {% get_static_prefix as STATIC_PREFIX %}
+{% load compress %}
 
-<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/jquery-2.0.3.min.js"></script>
-<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/search.js"></script>
-<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/bootstrap.min.css"></link>
-<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/search.css"></link>
+<link href="//netdna.bootstrapcdn.com/bootstrap/3.0.2/css/bootstrap.min.css" rel="stylesheet">
+{% compress css %}
+	<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/search.css"></link>
+	<link rel="stylesheet" href="{{ STATIC_PREFIX }}ding/user_profile.css"></link>
+{% endcompress  %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/2.0.3/jquery.min.js" async="true"></script>
+{% compress js %}
+	<script type="text/javascript" src="{{ STATIC_PREFIX }}ding/search.js" async="true"></script>
+{% endcompress  %}
 
 {% include "ding/user_profile.html" with name=user_name %}
 
 <div class="logo">
 	<p class = "logo-text">
-		<img class = "logo-image" src="{{STATIC_PREFIX}}ding/images/logo.png"/>
+		<img class = "logo-image" src="{{STATIC_PREFIX}}ding/images/logo_80_80.png" width="80" height="80" />
 		ding
 	</p>
 </div>

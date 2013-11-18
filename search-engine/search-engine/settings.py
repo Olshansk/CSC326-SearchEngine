@@ -3,7 +3,7 @@ import os
 
 DIRNAME = os.path.abspath(os.path.dirname(__file__))
 
-DEBUG = True #os.environ.get('DING_DEBUG') == 'True'
+DEBUG = os.environ.get('DING_DEBUG') == 'True'
 TEMPLATE_DEBUG = DEBUG
 
 ADMINS = (
@@ -89,8 +89,12 @@ STATICFILES_DIRS = (
 STATICFILES_FINDERS = (
     'django.contrib.staticfiles.finders.FileSystemFinder',
     'django.contrib.staticfiles.finders.AppDirectoriesFinder',
+    'compressor.finders.CompressorFinder',
+
     #    'django.contrib.staticfiles.finders.DefaultStorageFinder',
 )
+
+COMPRESS_ENABLED = True
 
 # Make this unique, and don't share it with anybody.
 SECRET_KEY = '@3-)le+*$8==q-g2cq8*m-7xhg9hupa*aetn#wid_amofbqz-$'
@@ -102,6 +106,13 @@ TEMPLATE_LOADERS = (
     #     'django.template.loaders.eggs.Loader',
 )
 
+GZIP_CONTENT_TYPES = (
+    'text/css',
+    'application/javascript',
+    'application/x-javascript',
+    'text/javascript'
+)
+
 MIDDLEWARE_CLASSES = (
     'django.middleware.cache.UpdateCacheMiddleware',
     'django.middleware.cache.FetchFromCacheMiddleware',
@@ -110,10 +121,10 @@ MIDDLEWARE_CLASSES = (
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
+    'django.middleware.gzip.GZipMiddleware',
     # Uncomment the next line for simple clickjacking protection:
-    # 'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    # 'django.middleware.clickjacking.XFrameOptionsMiddleware'
 )
-
 ROOT_URLCONF = 'search-engine.urls'
 
 # Python dotted path to the WSGI application used by Django's runserver.
@@ -134,6 +145,7 @@ INSTALLED_APPS = (
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'ding',
+    'compressor',
     # Uncomment the next line to enable the admin:
     'django.contrib.admin',
     # Uncomment the next line to enable admin documentation:
