@@ -135,7 +135,7 @@ def search(request):
     for s in list_sw[0:20]:
         words.update({s.word_text: s.word_freq})
         # Passes in the dictionary as input and renders the search html page
-    
+
     context = {'frequency_dictionary': words.iteritems()}
 
     # Retrieve the user name and profile image url and add it to context
@@ -218,7 +218,7 @@ def get_search_results(request, query, scroll_num):
     url = redirect_if_not_logged_in(request)
     if url is not None:
         return url
-    
+
     # Retrieve list of search results
     filtered_docs = document_objects_for_keyword_in_range(int(scroll_num), query)
     # Serializes results into json
@@ -246,7 +246,7 @@ def user_data_from_credentials(credentials):
     http = credentials.authorize(http)
     # Get user name and image url
     users_service = build('plus', 'v1', http=http)
-    
+
     # Test to make sure that access hasn't been revoked yet
     try:
         profile = users_service.people().get(userId='me').execute()
@@ -312,6 +312,6 @@ def error_500(request):
     url = redirect_if_not_logged_in(request)
     if url is not None:
         return url
-    
+
     error = {'error_type': 500, 'request_path': request.path}
     return render(request, 'ding/error.html', error, status=500)
