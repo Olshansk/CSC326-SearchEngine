@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# Install Apache, WSGI, and PIP
-sudo apt-get install apache2 libapache2-mod-wsgi python-pip -y
+# Install Apache, WSGI, PIP, and Redis
+sudo apt-get install apache2 libapache2-mod-wsgi python-pip redis-server -y
 
 # Install Ding python dependencies
 sudo pip install -r requirements.txt
@@ -9,6 +9,14 @@ sudo pip install -r requirements.txt
 # Create Apache configuration
 sudo cp -T ding.conf /etc/apache2/sites-available/ding.conf
 sudo a2ensite ding
+
+# Create Redis configuration
+sudo cp -T redis.conf /etc/redis/redis.conf
+sudo usermod -a -G redis www-data
+sudo chmod 775 /var/run/redis/redis.sock
+
+# Restart Redis after changing config
+sudo service redis-server restart
 
 # Create db and crawl
 cd search-engine
