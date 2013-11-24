@@ -12,11 +12,9 @@ sudo a2ensite ding
 
 # Create Redis configuration
 sudo cp -T redis.conf /etc/redis/redis.conf
+sudo service redis-server restart
 sudo usermod -a -G redis www-data
 sudo chmod 775 /var/run/redis/redis.sock
-
-# Restart Redis after changing config
-sudo service redis-server restart
 
 # Create db and crawl
 cd search-engine
