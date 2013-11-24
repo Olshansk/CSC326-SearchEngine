@@ -10,6 +10,10 @@ sudo pip install -r requirements.txt
 sudo cp -T ding.conf /etc/apache2/sites-available/ding.conf
 sudo a2ensite ding
 
+# Install mod_pagespeed
+wget https://dl-ssl.google.com/dl/linux/direct/mod-pagespeed-stable_current_amd64.deb
+sudo dpkg -i mod-pagespeed-stable_current_amd64.deb
+
 # Create Redis configuration
 sudo cp -T redis.conf /etc/redis/redis.conf
 sudo service redis-server restart
@@ -29,4 +33,3 @@ cd ..
 
 # Restart Apache server
 sudo /etc/init.d/apache2 restart
-
